@@ -1,0 +1,9 @@
+# Register a new User
+POST http://127.0.0.1:8000/users/register
+Content-type: application/json
+Accept: application/problem+json, application/json
+
+{
+  "uuid": "647ddea6-248f-4733-a524-8c79d1f5b6b1",
+  "name": "a"
+}
