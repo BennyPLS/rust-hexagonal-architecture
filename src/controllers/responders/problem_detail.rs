@@ -116,7 +116,6 @@ impl<'r> Responder<'r, 'static> for ProblemDetail {
         Response::build()
             .status(self.status)
             .header(ContentType::new("application", "problem+json"))
-            .header(ContentType::JSON)
             .sized_body(json.len(), Cursor::new(json))
             .ok()
     }

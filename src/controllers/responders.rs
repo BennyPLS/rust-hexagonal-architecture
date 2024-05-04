@@ -1,8 +1,8 @@
 use std::io::Cursor;
 
-use rocket::{Request, Response};
 use rocket::http::Status;
 use rocket::response::Responder;
+use rocket::{Request, Response};
 use serde::Serialize;
 
 pub mod problem_detail;
@@ -47,7 +47,7 @@ impl<T: Serialize> JsonResponse<T> {
 }
 
 impl<'r, T: Serialize> Responder<'r, 'static> for JsonResponse<T> {
-    fn respond_to(self, request: &'r Request<'_>) -> rocket::response::Result<'static> {
+    fn respond_to(self, _: &'r Request<'_>) -> rocket::response::Result<'static> {
         let json = serde_json::to_string(&self.body).unwrap();
 
         Response::build()

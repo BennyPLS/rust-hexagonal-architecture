@@ -5,10 +5,6 @@ use rocket::{Catcher, Request};
 
 use crate::controllers::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
 
-pub fn catchers() -> Vec<Catcher> {
-    catchers![not_found, unprocessable_entity]
-}
-
 #[catch(400)]
 pub fn bad_request(req: &Request) -> ProblemDetail {
     let err = req.local_cache::<Option<HashMap<String, serde_json::Value>>, _>(|| None);

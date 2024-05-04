@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-use std::fmt::Display;
 
-use rocket::{Data, Request};
 use rocket::data::{FromData, Limits, Outcome};
 use rocket::http::Status;
 use rocket::request::local_cache;
+use rocket::{Data, Request};
 use serde::Deserialize;
 use serde_json::error::Category;
 use serde_json::json;
@@ -18,6 +17,8 @@ pub enum JsonValidationError {
         #[from]
         source: ValidationErrors,
     },
+    #[error("Body empty")]
+    EmptyBody,
     #[error("Parsing failed")]
     Parse {
         #[from]
@@ -34,6 +35,7 @@ pub enum JsonValidationError {
 
 pub enum JsonGuardErrors<'a> {
     ValidationError(&'a ValidationErrors),
+    BodyEmpty,
     ParseError(&'a serde_json::Error),
     IO(&'a std::io::Error),
 }
@@ -52,6 +54,9 @@ impl<'a> JsonGuardErrors<'a> {
             }
             JsonGuardErrors::ParseError(serde_error) => {
                 extensions.insert("parse_error".to_string(), json!(serde_error.to_string()));
+            }
+            JsonGuardErrors::BodyEmpty => {
+                extensions.insert("parse_error".to_string(), json!("Body empty"));
             }
             JsonGuardErrors::IO(io) => {
                 extensions.insert("io_error".to_string(), json!(io.kind().to_string()));
@@ -98,6 +103,11 @@ where
         };
 
         let string = local_cache!(req, string);
+
+        if string.is_empty() {
+            req.local_cache(|| Some(JsonGuardErrors::BodyEmpty.get_problem_detail_extensions()));
+            return Outcome::Error((Status::BadRequest, JsonValidationError::EmptyBody));
+        }
 
         match serde_json::from_str::<T>(string) {
             Err(error) => match error.classify() {

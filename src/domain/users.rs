@@ -1,12 +1,49 @@
-use argon2::PasswordHash;
-use uuid::Uuid;
+pub struct UserID(String);
 
-pub struct User<'a> {
-    uuid: Uuid,
-    username: &'a str,
-    password_hash: PasswordHash<'a>,
+impl UserID {
+    fn new(value: String) -> UserID {
+        UserID(value)
+    }
 }
 
-impl<'a> User<'a> {
-    fn new() {}
+pub struct UserName(String);
+
+impl UserName {
+    fn new(value: String) -> UserName {
+        UserName(value)
+    }
+}
+
+pub struct UserPassword(String);
+
+impl UserPassword {
+    fn new(value: String) -> UserPassword {
+        UserPassword(value)
+    }
+}
+
+pub struct UserEmail(String);
+
+impl UserEmail {
+    fn new(value: String) -> UserEmail {
+        UserEmail(value)
+    }
+}
+
+pub struct User {
+    id: UserID,
+    name: UserName,
+    password: UserPassword,
+    email: UserEmail,
+}
+
+impl User {
+    pub fn create(id: String, name: String, password: String, email: String) -> User {
+        User {
+            id: UserID::new(id),
+            name: UserName::new(name),
+            password: UserPassword::new(password),
+            email: UserEmail::new(email),
+        }
+    }
 }

@@ -1,14 +1,16 @@
 #[macro_use]
 extern crate rocket;
 
-use rocket::{Build, launch, Rocket};
+use rocket::{launch, Build, Rocket};
 
 use crate::controllers::users as api_users;
 
 mod controllers;
 mod domain;
+mod infrastructure;
 mod repositories;
 mod services;
+mod application;
 
 #[launch]
 fn rocket() -> Rocket<Build> {
