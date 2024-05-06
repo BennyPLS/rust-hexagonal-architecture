@@ -1,0 +1,26 @@
+[package]
+name = "apps"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+contexts = { path = "../contexts" }
+
+rocket.workspace = true
+shaku_rocket.workspace = true
+
+utoipa.workspace = true
+
+shaku.workspace = true
+
+uuid.workspace = true
+
+serde.workspace = true
+serde_json.workspace = true
+
+argon2.workspace = true
+
+validator.workspace = true
+
+thiserror.workspace = true
+anyhow.workspace = true

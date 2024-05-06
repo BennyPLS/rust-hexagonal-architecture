@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct UserID(String);
 
 impl UserID {
@@ -5,7 +6,7 @@ impl UserID {
         UserID(value)
     }
 }
-
+#[derive(Debug)]
 pub struct UserName(String);
 
 impl UserName {
@@ -14,6 +15,7 @@ impl UserName {
     }
 }
 
+#[derive(Debug)]
 pub struct UserPassword(String);
 
 impl UserPassword {
@@ -22,6 +24,7 @@ impl UserPassword {
     }
 }
 
+#[derive(Debug)]
 pub struct UserEmail(String);
 
 impl UserEmail {
@@ -30,6 +33,7 @@ impl UserEmail {
     }
 }
 
+#[derive(Debug)]
 pub struct User {
     id: UserID,
     name: UserName,

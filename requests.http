@@ -5,5 +5,7 @@ Accept: application/problem+json, application/json
 
 {
   "uuid": "647ddea6-248f-4733-a524-8c79d1f5b6b1",
-  "name": "a"
+  "name": "test user 1234",
+  "password": "0123456789",
+  "email": "test@test.tes"
 }

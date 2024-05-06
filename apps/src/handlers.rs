@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use rocket::http::Status;
 use rocket::{Catcher, Request};
 
-use crate::controllers::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
+use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
 
 #[catch(400)]
 pub fn bad_request(req: &Request) -> ProblemDetail {

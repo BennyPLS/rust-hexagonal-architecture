@@ -1,5 +1,3 @@
-use crate::domain::user_repository::UserRepository;
-use crate::domain::users::User;
 use sqlite::Connection;
 
 struct UserRepositorySQLite {
