@@ -1,1 +1,4 @@
+# Target Directory
 /target
+# Database Files
+database.sqlite

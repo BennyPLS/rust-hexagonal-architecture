@@ -50,4 +50,20 @@ impl User {
             email: UserEmail::new(email),
         }
     }
+
+    pub fn get_id(&self) -> &str {
+        &self.id.0
+    }
+
+    pub fn get_name(&self) -> &str {
+        &self.name.0
+    }
+
+    pub fn get_password(&self) -> &str {
+        &self.password.0
+    }
+
+    pub fn get_email(&self) -> &str {
+        &self.email.0
+    }
 }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="user.sqlite" uuid="ef2ef24e-f117-408c-9de4-1a5b6e0613bf">
+    <data-source source="LOCAL" name="database" uuid="aad60dfe-4493-4ff6-ae9c-fe4d76320120">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:user.sqlite</jdbc-url>
+      <jdbc-url>jdbc:sqlite:D:\programing\learning\rust\rust-hexagonal-architecture\database.sqlite</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

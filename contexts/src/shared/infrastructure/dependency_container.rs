@@ -1,15 +1,21 @@
 use crate::users::application::user_register_service::UserRegisterService;
+use crate::users::infrastructure::sqlite::user_repository_sqlite::{
+    UserRepositorySQLite, UserRepositorySQLiteParameters,
+};
 use shaku::ModuleBuilder;
+use sqlite::ConnectionThreadSafe;
 
 shaku::module! {
-    pub DependencyContainer {
+    pub SQLiteImplementation {
         components = [
-            UserRegisterService
+            UserRepositorySQLite,
+            UserRegisterService,
         ],
         providers = []
     }
 }
 
-pub async fn default_module() -> ModuleBuilder<DependencyContainer> {
-    DependencyContainer::builder()
+pub fn build_sqlite_container(conn: ConnectionThreadSafe) -> ModuleBuilder<SQLiteImplementation> {
+    SQLiteImplementation::builder()
+        .with_component_parameters::<UserRepositorySQLite>(UserRepositorySQLiteParameters { connection: conn })
 }

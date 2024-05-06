@@ -3,10 +3,12 @@ extern crate rocket;
 
 use rocket::{Build, Rocket};
 
-use contexts::shared::infrastructure::dependency_container::{default_module, DependencyContainer};
+use contexts::shared::infrastructure::dependency_container::{build_sqlite_container, SQLiteImplementation};
+use contexts::users::infrastructure::sqlite;
 
 use crate::controllers::users;
-pub type Inject<'r, I> = shaku_rocket::Inject<'r, DependencyContainer, I>;
+
+pub type Inject<'r, I> = shaku_rocket::Inject<'r, SQLiteImplementation, I>;
 
 mod controllers;
 mod guard;
@@ -15,8 +17,10 @@ mod responders;
 
 #[launch]
 async fn rocket() -> Rocket<Build> {
+    let conn = sqlite::init().expect("Couldn't initialize the database.");
+    
     rocket::build()
-        .manage(Box::new(default_module().await.build()))
+        .manage(Box::new(build_sqlite_container(conn).build()))
         .register(
             "/",
             catchers![
