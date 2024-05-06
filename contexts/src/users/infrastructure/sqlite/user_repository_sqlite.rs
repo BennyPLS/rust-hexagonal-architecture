@@ -1,4 +1,6 @@
 use sqlite::Connection;
+use crate::users::domain::user_repository::UserRepository;
+use crate::users::domain::users::User;
 
 struct UserRepositorySQLite {
     connection: Connection,
