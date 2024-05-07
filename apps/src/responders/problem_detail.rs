@@ -16,11 +16,22 @@ pub struct ProblemDetail {
     detail: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     instance: Option<String>,
-    #[serde(flatten)]
+    #[serde(skip_serializing_if = "HashMap::is_empty", flatten)]
     extensions: HashMap<String, serde_json::Value>,
 }
 
 impl ProblemDetail {
+    pub fn from(status: Status) -> ProblemDetail {
+        ProblemDetail {
+            r#type: String::from("about:blank"),
+            status,
+            title: String::from(status.reason_lossy()),
+            detail: None,
+            instance: None,
+            extensions: HashMap::new(),
+        }
+    }
+
     pub fn builder() -> ProblemDetailBuilder {
         ProblemDetailBuilder::default()
     }
@@ -51,7 +62,7 @@ impl Default for ProblemDetailBuilder {
 }
 
 impl ProblemDetailBuilder {
-    pub fn new(status: Status) -> ProblemDetailBuilder {
+    pub fn from(status: Status) -> ProblemDetailBuilder {
         ProblemDetailBuilder {
             r#type: None,
             status,
@@ -62,8 +73,8 @@ impl ProblemDetailBuilder {
         }
     }
 
-    pub fn r#type(mut self, r#type: String) -> Self {
-        self.r#type = Some(r#type);
+    pub fn r#type<T: Into<String>>(mut self, r#type: T) -> Self {
+        self.r#type = Some(r#type.into());
         self
     }
 
@@ -72,28 +83,31 @@ impl ProblemDetailBuilder {
         self
     }
 
-    pub fn title(mut self, title: String) -> Self {
-        self.title = title;
+    pub fn title<T: Into<String>>(mut self, title: T) -> Self {
+        self.title = title.into();
         self
     }
 
-    pub fn detail(mut self, detail: String) -> Self {
-        self.detail = Some(detail);
+    pub fn detail<T: Into<String>>(mut self, detail: T) -> Self {
+        self.detail = Some(detail.into());
         self
     }
 
-    pub fn instance(mut self, instance: String) -> Self {
-        self.instance = Some(instance);
+    pub fn instance<T: Into<String>>(mut self, instance: T) -> Self {
+        self.instance = Some(instance.into());
         self
     }
 
-    pub fn extensions<T: IntoIterator<Item = (String, serde_json::Value)>>(mut self, extension: T) -> Self {
+    pub fn extensions<T: IntoIterator<Item = (String, serde_json::Value)>>(
+        mut self,
+        extension: T,
+    ) -> Self {
         self.extensions.extend(extension);
         self
     }
 
-    pub fn add_extension(mut self, key: String, value: serde_json::Value) -> Self {
-        self.extensions.insert(key, value);
+    pub fn add_extension<T: Into<String>>(mut self, key: T, value: serde_json::Value) -> Self {
+        self.extensions.insert(key.into(), value);
         self
     }
 

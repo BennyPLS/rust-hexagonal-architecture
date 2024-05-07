@@ -16,6 +16,7 @@ shaku::module! {
 }
 
 pub fn build_sqlite_container(conn: ConnectionThreadSafe) -> ModuleBuilder<SQLiteImplementation> {
-    SQLiteImplementation::builder()
-        .with_component_parameters::<UserRepositorySQLite>(UserRepositorySQLiteParameters { connection: conn })
+    SQLiteImplementation::builder().with_component_parameters::<UserRepositorySQLite>(
+        UserRepositorySQLiteParameters { connection: conn },
+    )
 }

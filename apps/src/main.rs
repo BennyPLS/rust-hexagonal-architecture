@@ -3,7 +3,9 @@ extern crate rocket;
 
 use rocket::{Build, Rocket};
 
-use contexts::shared::infrastructure::dependency_container::{build_sqlite_container, SQLiteImplementation};
+use contexts::shared::infrastructure::dependency_container::{
+    build_sqlite_container, SQLiteImplementation,
+};
 use contexts::users::infrastructure::sqlite;
 
 use crate::controllers::users;
@@ -18,7 +20,7 @@ mod responders;
 #[launch]
 async fn rocket() -> Rocket<Build> {
     let conn = sqlite::init().expect("Couldn't initialize the database.");
-    
+
     rocket::build()
         .manage(Box::new(build_sqlite_container(conn).build()))
         .register(
@@ -26,9 +28,10 @@ async fn rocket() -> Rocket<Build> {
             catchers![
                 handlers::not_found,
                 handlers::bad_request,
+                handlers::conflict,
                 handlers::payload_too_large,
                 handlers::unprocessable_entity,
-                handlers::internal_error_server
+                handlers::internal_error_server,
             ],
         )
         .mount(users::BASE_URL, routes![users::user_register])

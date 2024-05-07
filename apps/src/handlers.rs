@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use rocket::http::Status;
-use rocket::{Catcher, Request};
+use rocket::Request;
 
 use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
 
@@ -9,7 +9,7 @@ use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
 pub fn bad_request(req: &Request) -> ProblemDetail {
     let err = req.local_cache::<Option<HashMap<String, serde_json::Value>>, _>(|| None);
 
-    let mut builder = ProblemDetailBuilder::new(Status::BadRequest)
+    let mut builder = ProblemDetailBuilder::from(Status::BadRequest)
         .detail("The server cannot or will not process the request due to something that is perceived to be a client error".to_string());
 
     if let Some(err) = err {
@@ -22,7 +22,7 @@ pub fn bad_request(req: &Request) -> ProblemDetail {
 /// Handles a 404 error by returning a JSON response with an error message.
 #[catch(404)]
 pub fn not_found(req: &Request) -> ProblemDetail {
-    ProblemDetailBuilder::new(Status::NotFound)
+    ProblemDetailBuilder::from(Status::NotFound)
         .detail(format!(
             "The requested uri '{}' was not found",
             req.uri().path()
@@ -30,9 +30,15 @@ pub fn not_found(req: &Request) -> ProblemDetail {
         .build()
 }
 
+/// Handles a 409 error by returning a JSON response with an error message.
+#[catch(409)]
+pub fn conflict(_: &Request) -> ProblemDetail {
+    ProblemDetailBuilder::from(Status::Conflict).build()
+}
+
 #[catch(413)]
 pub fn payload_too_large() -> ProblemDetail {
-    ProblemDetailBuilder::new(Status::PayloadTooLarge)
+    ProblemDetailBuilder::from(Status::PayloadTooLarge)
         .detail("Request entity is larger than limits defined by server".to_string())
         .build()
 }
@@ -42,7 +48,7 @@ pub fn payload_too_large() -> ProblemDetail {
 pub fn unprocessable_entity(req: &Request) -> ProblemDetail {
     let err = req.local_cache::<Option<HashMap<String, serde_json::Value>>, _>(|| None);
 
-    let mut builder = ProblemDetailBuilder::new(Status::UnprocessableEntity).detail(
+    let mut builder = ProblemDetailBuilder::from(Status::UnprocessableEntity).detail(
         "The request was well-formed but was unable to be followed due to semantic errors"
             .to_string(),
     );
@@ -58,7 +64,7 @@ pub fn unprocessable_entity(req: &Request) -> ProblemDetail {
 pub fn internal_error_server(req: &Request) -> ProblemDetail {
     let err = req.local_cache::<Option<HashMap<String, serde_json::Value>>, _>(|| None);
 
-    let mut builder = ProblemDetailBuilder::new(Status::InternalServerError).detail(
+    let mut builder = ProblemDetailBuilder::from(Status::InternalServerError).detail(
         "The server has encountered a situation it does not know how to handle".to_string(),
     );
 

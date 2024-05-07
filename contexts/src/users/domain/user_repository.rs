@@ -1,8 +1,16 @@
-use crate::users::domain::users::User;
 use shaku::Interface;
+use thiserror::Error;
+
+use crate::users::domain::users::User;
+
+#[derive(Error, Debug)]
+pub enum RepositoryErrors {
+    #[error("The data trying to be stored is already there")]
+    AlreadyExists,
+    #[error("The server has found an unexpected situation")]
+    InternalServerError,
+}
 
 pub trait UserRepository: Interface {
-    type Error;
-
-    fn save(&self, user: User) -> Result<(), Self::Error>;
+    fn save(&self, user: User) -> Result<(), RepositoryErrors>;
 }
