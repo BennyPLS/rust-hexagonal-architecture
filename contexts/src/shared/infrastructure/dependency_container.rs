@@ -1,4 +1,4 @@
-use crate::users::application::user_register_service::UserRegisterService;
+use crate::users::application::register::UserRegisterService;
 use crate::users::infrastructure::sqlite::user_repository_sqlite::{
     UserRepositorySQLite, UserRepositorySQLiteParameters,
 };

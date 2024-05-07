@@ -25,3 +25,5 @@ pub fn init() -> Result<ConnectionThreadSafe, sqlite::Error> {
 
     Ok(conn)
 }
+
+trait FromRow

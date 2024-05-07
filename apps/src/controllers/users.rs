@@ -7,8 +7,8 @@ use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
 
-use contexts::users::application::user_register_service::{UserRegister, UserRegisterErrors};
-use contexts::users::application::user_register_service::UserRegisterErrors::AlreadyExists;
+use contexts::users::application::register::{UserRegister, UserRegisterErrors};
+use contexts::users::application::register::UserRegisterErrors::AlreadyExists;
 
 use crate::guard::Json;
 use crate::Inject;
