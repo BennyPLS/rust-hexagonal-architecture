@@ -21,8 +21,8 @@ impl From<RepositoryErrors> for UserFindErrors {
 }
 
 pub trait UserFind: Interface {
-    fn find_by(&self, id: String) -> Option<User>;
-    fn find_like(&self, name: String) -> Option<Vec<User>>;
+    fn find_by(&self, id: &str) -> Option<User>;
+    fn get_all(&self) -> Vec<User>;
 }
 
 #[derive(Component)]
@@ -33,11 +33,11 @@ pub struct UserFindService {
 }
 
 impl UserFind for UserFindService {
-    fn find_by(&self, id: String) -> Option<User> {
-        todo!()
+    fn find_by(&self, id: &str) -> Option<User> {
+        self.user_repository.find_by(id)
     }
 
-    fn find_like(&self, name: String) -> Option<Vec<User>> {
-        todo!()
+    fn get_all(&self) -> Vec<User> {
+        self.user_repository.get_all()
     }
 }

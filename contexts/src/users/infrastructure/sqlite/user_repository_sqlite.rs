@@ -1,8 +1,7 @@
-use shaku::Component;
-use sqlite::{ConnectionThreadSafe, Error, State};
-
 use crate::users::domain::user_repository::{RepositoryErrors, UserRepository};
-use crate::users::domain::users::User;
+use crate::users::domain::users::{User, UserEmail, UserID, UserName, UserPassword};
+use shaku::Component;
+use sqlite::{ConnectionThreadSafe, Error, State, Statement};
 
 impl From<Error> for RepositoryErrors {
     fn from(value: Error) -> Self {
@@ -17,9 +16,18 @@ impl From<Error> for RepositoryErrors {
     }
 }
 
-fn unmapped_error(error: sqlite::Error) -> RepositoryErrors {
+fn unmapped_error(error: Error) -> RepositoryErrors {
     dbg!(error);
     RepositoryErrors::InternalServerError
+}
+
+fn get_user(statement: &Statement) -> User {
+    User::new(
+        UserID::new(statement.read::<String, _>("id").unwrap()),
+        UserName::new(statement.read::<String, _>("name").unwrap()),
+        UserPassword::new(statement.read::<String, _>("password").unwrap()),
+        UserEmail::new(statement.read::<String, _>("email").unwrap()),
+    )
 }
 
 #[derive(Component)]
@@ -30,7 +38,9 @@ pub struct UserRepositorySQLite {
 
 const STMT_INSERT: &str = "INSERT INTO users (id, name, password, email) VALUES (?, ?, ?, ?)";
 const STMT_FIND_BY_ID: &str = "SELECT * FROM users WHERE id = ?";
-const STMT_FIND_LIKE_NAME: &str = "SELECT * FROM users WHERE name like '%?%'";
+const STMT_GET_ALL: &str = "SELECT * FROM users";
+const STMT_UPDATE: &str = "UPDATE users SET name = ? AND password = ? AND email = ? WHERE id = ?";
+const STMT_DELETE: &str = "DELETE FROM users WHERE id = ?";
 
 impl UserRepository for UserRepositorySQLite {
     fn save(&self, user: &User) -> Result<(), RepositoryErrors> {
@@ -51,20 +61,21 @@ impl UserRepository for UserRepositorySQLite {
 
         stmt.bind((1, id)).ok()?;
 
-
-
-        None
+        if let Ok(State::Row) = stmt.next() {
+            Some(get_user(&stmt))
+        } else {
+            None
+        }
     }
 
-    fn find_like(&self, name: &str) -> Option<Vec<User>> {
-        let mut stmt = self.connection.prepare(STMT_FIND_LIKE_NAME).ok()?;
+    fn get_all(&self) -> Vec<User> {
+        let mut stmt = self.connection.prepare(STMT_GET_ALL).unwrap();
 
-        stmt.bind((1, name)).ok()?;
-
+        let mut users: Vec<User> = vec![];
         while let Ok(State::Row) = stmt.next() {
-            dbg!(stmt.read::<String, _>(0));
+            users.push(get_user(&stmt))
         }
 
-        None
+        users
     }
 }

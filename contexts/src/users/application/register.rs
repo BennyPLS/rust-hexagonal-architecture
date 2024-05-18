@@ -50,6 +50,6 @@ impl UserRegister for UserRegisterService {
     ) -> Result<(), UserRegisterErrors> {
         let user = User::create(uuid, name, password, email);
 
-        Ok(self.user_repository.save(user)?)
+        Ok(self.user_repository.save(&user)?)
     }
 }

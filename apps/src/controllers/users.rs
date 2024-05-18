@@ -1,19 +1,21 @@
 use std::panic::resume_unwind;
 
-use rocket::{post, routes};
+use contexts::users::application::find::UserFind;
 use rocket::http::Status;
+use rocket::{post, routes};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
 
-use contexts::users::application::register::{UserRegister, UserRegisterErrors};
 use contexts::users::application::register::UserRegisterErrors::AlreadyExists;
+use contexts::users::application::register::{UserRegister, UserRegisterErrors};
+use contexts::users::domain::users::User;
 
 use crate::guard::Json;
-use crate::Inject;
-use crate::responders::JsonResponse;
 use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
+use crate::responders::JsonResponse;
+use crate::Inject;
 
 pub const BASE_URL: &str = "/users";
 
@@ -26,6 +28,14 @@ pub struct UserRequest {
     plain_password: String,
     #[validate(email)]
     email: String,
+}
+
+impl From<User> for UserRequest {
+    fn from(value: User) -> Self {
+        UserRequest {
+            uuid: value.get_id(),
+        }
+    }
 }
 
 #[post("/register", data = "<new_user>")]
@@ -54,4 +64,9 @@ pub fn user_register(
     }
 
     Ok(Status::Created)
+}
+
+#[get("/")]
+pub fn user_get_all(user_service: Inject<'_, dyn UserFind>) -> JsonResponse<Vec<UserRequest>> {
+    user_service.get_all()
 }

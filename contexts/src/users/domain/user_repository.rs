@@ -14,5 +14,5 @@ pub enum RepositoryErrors {
 pub trait UserRepository: Interface {
     fn save(&self, user: &User) -> Result<(), RepositoryErrors>;
     fn find_by(&self, id: &str) -> Option<User>;
-    fn find_like(&self, name: &str) -> Option<Vec<User>>;
+    fn get_all(&self) -> Vec<User>;
 }

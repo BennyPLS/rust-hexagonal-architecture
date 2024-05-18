@@ -2,7 +2,7 @@
 pub struct UserID(String);
 
 impl UserID {
-    fn new(value: String) -> UserID {
+    pub fn new(value: String) -> UserID {
         UserID(value)
     }
 }
@@ -10,7 +10,7 @@ impl UserID {
 pub struct UserName(String);
 
 impl UserName {
-    fn new(value: String) -> UserName {
+    pub fn new(value: String) -> UserName {
         UserName(value)
     }
 }
@@ -19,7 +19,7 @@ impl UserName {
 pub struct UserPassword(String);
 
 impl UserPassword {
-    fn new(value: String) -> UserPassword {
+    pub fn new(value: String) -> UserPassword {
         UserPassword(value)
     }
 }
@@ -28,7 +28,7 @@ impl UserPassword {
 pub struct UserEmail(String);
 
 impl UserEmail {
-    fn new(value: String) -> UserEmail {
+    pub fn new(value: String) -> UserEmail {
         UserEmail(value)
     }
 }
@@ -42,6 +42,15 @@ pub struct User {
 }
 
 impl User {
+    pub fn new(id: UserID, name: UserName, password: UserPassword, email: UserEmail) -> User {
+        User {
+            id,
+            name,
+            password,
+            email,
+        }
+    }
+
     pub fn create(id: String, name: String, password: String, email: String) -> User {
         User {
             id: UserID::new(id),

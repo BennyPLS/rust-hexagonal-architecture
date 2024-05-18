@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use sqlite::ConnectionThreadSafe;
 
 pub mod user_repository_sqlite;
@@ -25,5 +23,3 @@ pub fn init() -> Result<ConnectionThreadSafe, sqlite::Error> {
 
     Ok(conn)
 }
-
-trait FromRow
