@@ -45,6 +45,7 @@ dependencies = [
  "anyhow",
  "argon2",
  "contexts",
+ "log",
  "rocket",
  "serde",
  "serde_json",

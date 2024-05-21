@@ -6,9 +6,10 @@ use rocket::{Build, Rocket};
 use contexts::shared::infrastructure::dependency_container::{
     build_sqlite_container, SQLiteImplementation,
 };
-use contexts::users::infrastructure::sqlite;
 
 use crate::controllers::users;
+
+use contexts::users::infrastructure::sqlite;
 
 pub type Inject<'r, I> = shaku_rocket::Inject<'r, SQLiteImplementation, I>;
 

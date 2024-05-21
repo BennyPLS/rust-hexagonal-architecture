@@ -1,5 +1,5 @@
 use shaku::Component;
-use sqlite::{ConnectionThreadSafe, Error, State, Statement};
+use sqlite::{ConnectionThreadSafe, Error, Row, State, Statement};
 
 use crate::users::domain::user_repository::{RepositoryErrors, UserRepository};
 use crate::users::domain::users::{User, UserEmail, UserID, UserName, UserPassword};
@@ -31,22 +31,20 @@ fn get_user(statement: &Statement) -> User {
     )
 }
 
-macro_rules! sql {
-    ($s:literal $(,)?) => {
-        $s
-    };
-}
-
 #[derive(Component)]
 #[shaku(interface = UserRepository)]
 pub struct UserRepositorySQLite {
-    connection: ConnectionThreadSafe,    
+    connection: ConnectionThreadSafe,
 }
-
-const STMT_INSERT: &str = sql!("INSERT INTO users (id, name, password, email) VALUES (?, ?, ?, ?)");
+// language=SQL
+const STMT_INSERT: &str = "INSERT INTO users (id, name, password, email) VALUES (?, ?, ?, ?)";
+// language=SQL
 const STMT_FIND_BY_ID: &str = "SELECT * FROM users WHERE id = ?";
+// language=SQL
 const STMT_GET_ALL: &str = "SELECT * FROM users";
+// language=SQL
 const STMT_UPDATE: &str = "UPDATE users SET name = ? AND password = ? AND email = ? WHERE id = ?";
+// language=SQL
 const STMT_DELETE: &str = "DELETE FROM users WHERE id = ?";
 
 impl UserRepository for UserRepositorySQLite {
@@ -68,7 +66,7 @@ impl UserRepository for UserRepositorySQLite {
 
         stmt.bind((1, id)).ok()?;
 
-        if let Ok(State::Row) = stmt.next() {
+if let Ok(State::Row) = stmt.next() {
             Some(get_user(&stmt))
         } else {
             None
