@@ -9,8 +9,8 @@ members = [
 rocket = { version = "0.5.0", features = ["json"] }
 utoipa = { version = "4.2.0", features = ["rocket_extras"] }
 
-shaku = { git = "https://github.com/BennyPLS/shaku", version = ">= 0.5.0, < 0.7.0" }
-shaku_rocket = { git = "https://github.com/BennyPLS/shaku", version = "0.7.0-rc.1" }
+shaku = ">= 0.5.0, < 0.7.0"
+shaku_rocket = "0.7.0-rc.1"
 
 uuid = { version = "1.8.0", features = ["serde"] }
 
