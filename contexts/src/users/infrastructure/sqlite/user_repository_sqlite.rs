@@ -1,7 +1,8 @@
-use crate::users::domain::user_repository::{RepositoryErrors, UserRepository};
-use crate::users::domain::users::{User, UserEmail, UserID, UserName, UserPassword};
 use shaku::Component;
 use sqlite::{ConnectionThreadSafe, Error, State, Statement};
+
+use crate::users::domain::user_repository::{RepositoryErrors, UserRepository};
+use crate::users::domain::users::{User, UserEmail, UserID, UserName, UserPassword};
 
 impl From<Error> for RepositoryErrors {
     fn from(value: Error) -> Self {
@@ -30,13 +31,19 @@ fn get_user(statement: &Statement) -> User {
     )
 }
 
+macro_rules! sql {
+    ($s:literal $(,)?) => {
+        $s
+    };
+}
+
 #[derive(Component)]
 #[shaku(interface = UserRepository)]
 pub struct UserRepositorySQLite {
-    connection: ConnectionThreadSafe,
+    connection: ConnectionThreadSafe,    
 }
 
-const STMT_INSERT: &str = "INSERT INTO users (id, name, password, email) VALUES (?, ?, ?, ?)";
+const STMT_INSERT: &str = sql!("INSERT INTO users (id, name, password, email) VALUES (?, ?, ?, ?)");
 const STMT_FIND_BY_ID: &str = "SELECT * FROM users WHERE id = ?";
 const STMT_GET_ALL: &str = "SELECT * FROM users";
 const STMT_UPDATE: &str = "UPDATE users SET name = ? AND password = ? AND email = ? WHERE id = ?";
@@ -69,7 +76,13 @@ impl UserRepository for UserRepositorySQLite {
     }
 
     fn get_all(&self) -> Vec<User> {
-        let mut stmt = self.connection.prepare(STMT_GET_ALL).unwrap();
+        let stmt = self.connection.prepare(STMT_GET_ALL);
+
+        if stmt.is_err() {
+            return vec![];
+        }
+
+        let mut stmt = stmt.unwrap();
 
         let mut users: Vec<User> = vec![];
         while let Ok(State::Row) = stmt.next() {
@@ -77,5 +90,24 @@ impl UserRepository for UserRepositorySQLite {
         }
 
         users
+    }
+
+    fn delete_by(&self, id: &str) -> Result<(), RepositoryErrors> {
+        let mut stmt = self.connection.prepare(STMT_DELETE)?;
+
+        stmt.bind((1, id))?;
+
+        Ok(())
+    }
+
+    fn update(&self, user: &User) -> Result<(), RepositoryErrors> {
+        let mut stmt = self.connection.prepare(STMT_UPDATE)?;
+
+        stmt.bind((1, user.get_name()))?;
+        stmt.bind((2, user.get_password()))?;
+        stmt.bind((3, user.get_email()))?;
+        stmt.bind((4, user.get_id()))?;
+
+        Ok(())
     }
 }
