@@ -7,10 +7,8 @@ use crate::users::domain::users::User;
 pub enum RepositoryErrors {
     #[error("The data trying to be stored is already there")]
     AlreadyExists,
-    #[error("The data trying to retrieve is not Found")]
-    NotFound,
     #[error("The server has found an unexpected situation")]
-    InternalServerError,
+    InternalServerError
 }
 
 pub trait UserRepository: Interface {
