@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use rocket::{Request, Response};
-use rocket::http::Status;
+use rocket::http::{ContentType, Status};
 use rocket::response::Responder;
 use serde::Serialize;
 
@@ -12,16 +12,9 @@ pub struct JsonResponse<T: Serialize> {
     status: Status,
 }
 
-impl<T: Serialize + Default> JsonResponse<T> {
+impl<T: Serialize> JsonResponse<T> {
     pub fn new(body: T, status: Status) -> JsonResponse<T> {
         JsonResponse { body, status }
-    }
-
-    pub fn empty_body(status: Status) -> JsonResponse<T> {
-        JsonResponse {
-            body: T::default(),
-            status,
-        }
     }
 
     pub fn ok(body: T) -> JsonResponse<T> {
@@ -44,13 +37,6 @@ impl<T: Serialize + Default> JsonResponse<T> {
             status: Status::Accepted,
         }
     }
-
-    pub fn no_content() -> JsonResponse<String> {
-        JsonResponse {
-            body: String::new(),
-            status: Status::NoContent,
-        }
-    }
 }
 
 impl<'r, T: Serialize> Responder<'r, 'static> for JsonResponse<T> {
@@ -59,6 +45,7 @@ impl<'r, T: Serialize> Responder<'r, 'static> for JsonResponse<T> {
 
         Response::build()
             .status(self.status)
+            .header(ContentType::JSON)
             .sized_body(json.len(), Cursor::new(json))
             .ok()
     }

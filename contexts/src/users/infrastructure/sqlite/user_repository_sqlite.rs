@@ -1,5 +1,5 @@
 use shaku::Component;
-use sqlite::{ConnectionThreadSafe, Error, Row, State, Statement};
+use sqlite::{ConnectionThreadSafe, Error, State, Statement};
 
 use crate::users::domain::user_repository::{RepositoryErrors, UserRepository};
 use crate::users::domain::users::{User, UserEmail, UserID, UserName, UserPassword};
@@ -24,10 +24,10 @@ fn unmapped_error(error: Error) -> RepositoryErrors {
 
 fn get_user(statement: &Statement) -> User {
     User::new(
-        UserID::new(statement.read::<String, _>("id").unwrap()),
-        UserName::new(statement.read::<String, _>("name").unwrap()),
-        UserPassword::new(statement.read::<String, _>("password").unwrap()),
-        UserEmail::new(statement.read::<String, _>("email").unwrap()),
+        UserID::new(statement.read::<String, _>(0).unwrap()),
+        UserName::new(statement.read::<String, _>(1).unwrap()),
+        UserPassword::new(statement.read::<String, _>(2).unwrap()),
+        UserEmail::new(statement.read::<String, _>(3).unwrap()),
     )
 }
 
@@ -66,7 +66,7 @@ impl UserRepository for UserRepositorySQLite {
 
         stmt.bind((1, id)).ok()?;
 
-if let Ok(State::Row) = stmt.next() {
+        if let Ok(State::Row) = stmt.next() {
             Some(get_user(&stmt))
         } else {
             None
@@ -93,7 +93,11 @@ if let Ok(State::Row) = stmt.next() {
     fn delete_by(&self, id: &str) -> Result<(), RepositoryErrors> {
         let mut stmt = self.connection.prepare(STMT_DELETE)?;
 
+        dbg!(id);
+
         stmt.bind((1, id))?;
+
+        stmt.next()?;
 
         Ok(())
     }
@@ -105,6 +109,8 @@ if let Ok(State::Row) = stmt.next() {
         stmt.bind((2, user.get_password()))?;
         stmt.bind((3, user.get_email()))?;
         stmt.bind((4, user.get_id()))?;
+
+        stmt.next()?;
 
         Ok(())
     }

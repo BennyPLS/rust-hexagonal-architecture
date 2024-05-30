@@ -21,7 +21,7 @@ impl From<RepositoryErrors> for UserUpdateErrors {
 }
 
 pub trait UserUpdate: Interface {
-    fn delete_by(&self, user: &User) -> Result<(), UserUpdateErrors>;
+    fn update(&self, user: &User) -> Result<(), UserUpdateErrors>;
 }
 
 #[derive(Component)]
@@ -32,7 +32,7 @@ pub struct UserUpdateService {
 }
 
 impl UserUpdate for UserUpdateService {
-    fn delete_by(&self, user: &User) -> Result<(), UserUpdateErrors> {
+    fn update(&self, user: &User) -> Result<(), UserUpdateErrors> {
         self.user_repository.update(user)?;
 
         Ok(())

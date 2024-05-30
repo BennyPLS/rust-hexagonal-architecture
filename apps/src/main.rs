@@ -35,5 +35,5 @@ async fn rocket() -> Rocket<Build> {
                 handlers::internal_error_server,
             ],
         )
-        .mount(users::BASE_URL, routes![users::user_register])
+        .mount(users::BASE_URL, routes![users::user_register, users::user_get, users::user_get_all, users::user_update, users::user_delete])
 }
