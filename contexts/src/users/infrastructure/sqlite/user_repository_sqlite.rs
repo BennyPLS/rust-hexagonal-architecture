@@ -24,10 +24,10 @@ fn unmapped_error(error: Error) -> RepositoryErrors {
 
 fn get_user(statement: &Statement) -> User {
     User::new(
-        UserID::new(statement.read::<String, _>(0).unwrap()),
-        UserName::new(statement.read::<String, _>(1).unwrap()),
-        UserPassword::new(statement.read::<String, _>(2).unwrap()),
-        UserEmail::new(statement.read::<String, _>(3).unwrap()),
+        UserID::new(statement.read::<String, _>(0).expect("Expected String User ID")),
+        UserName::new(statement.read::<String, _>(1).expect("Expected String User Name")),
+        UserPassword::new(statement.read::<String, _>(2).expect("Expected String User Password")),
+        UserEmail::new(statement.read::<String, _>(3).expect("Expected String User Email")),
     )
 }
 
