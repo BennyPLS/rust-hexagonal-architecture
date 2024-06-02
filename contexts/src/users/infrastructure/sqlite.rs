@@ -20,6 +20,6 @@ pub fn init() -> Result<ConnectionThreadSafe, sqlite::Error> {
             return Err(err);
         }
     }
-
+    
     Ok(conn)
 }

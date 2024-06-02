@@ -18,7 +18,7 @@ impl From<RepositoryErrors> for UserRegisterErrors {
     fn from(value: RepositoryErrors) -> Self {
         match value {
             RepositoryErrors::AlreadyExists => UserRegisterErrors::AlreadyExists,
-            RepositoryErrors::InternalServerError => UserRegisterErrors::InternalServerError,
+            RepositoryErrors::InternalServerError { .. } => UserRegisterErrors::InternalServerError,
         }
     }
 }

@@ -1,8 +1,9 @@
+use crate::users::domain::user_id::UserID;
 use shaku::Component;
 use sqlite::{ConnectionThreadSafe, Error, State, Statement};
 
 use crate::users::domain::user_repository::{RepositoryErrors, UserRepository};
-use crate::users::domain::users::{User, UserEmail, UserID, UserName, UserPassword};
+use crate::users::domain::users::{User, UserEmail, UserName, UserPassword};
 
 impl From<Error> for RepositoryErrors {
     fn from(value: Error) -> Self {
@@ -18,16 +19,34 @@ impl From<Error> for RepositoryErrors {
 }
 
 fn unmapped_error(error: Error) -> RepositoryErrors {
-    dbg!(error);
-    RepositoryErrors::InternalServerError
+    dbg!(&error);
+    RepositoryErrors::InternalServerError {
+        source: anyhow::Error::from(error),
+    }
 }
 
 fn get_user(statement: &Statement) -> User {
     User::new(
-        UserID::new(statement.read::<String, _>(0).expect("Expected String User ID")),
-        UserName::new(statement.read::<String, _>(1).expect("Expected String User Name")),
-        UserPassword::new(statement.read::<String, _>(2).expect("Expected String User Password")),
-        UserEmail::new(statement.read::<String, _>(3).expect("Expected String User Email")),
+        UserID::try_from(
+            statement
+                .read::<String, _>(0)
+                .expect("Expected String User ID").as_str(),
+        ).unwrap(), // TODO: Change Error Management
+        UserName::new(
+            statement
+                .read::<String, _>(1)
+                .expect("Expected String User Name"),
+        ),
+        UserPassword::new(
+            statement
+                .read::<String, _>(2)
+                .expect("Expected String User Password"),
+        ),
+        UserEmail::new(
+            statement
+                .read::<String, _>(3)
+                .expect("Expected String User Email"),
+        ),
     )
 }
 

@@ -1,11 +1,5 @@
-#[derive(Debug)]
-pub struct UserID(String);
+use crate::users::domain::user_id::UserID;
 
-impl UserID {
-    pub fn new(value: String) -> UserID {
-        UserID(value)
-    }
-}
 #[derive(Debug)]
 pub struct UserName(String);
 
@@ -53,7 +47,7 @@ impl User {
 
     pub fn create(id: String, name: String, password: String, email: String) -> User {
         User {
-            id: UserID::new(id),
+            id: UserID::try_from(id.as_str()).expect("hola"), // TODO: Add good error management.
             name: UserName::new(name),
             password: UserPassword::new(password),
             email: UserEmail::new(email),
@@ -61,7 +55,7 @@ impl User {
     }
 
     pub fn get_id(&self) -> &str {
-        &self.id.0
+        ""
     }
 
     pub fn get_name(&self) -> &str {
