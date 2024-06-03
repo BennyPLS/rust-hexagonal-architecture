@@ -3,8 +3,8 @@ use std::sync::Arc;
 use shaku::{Component, Interface};
 use thiserror::Error;
 
-use crate::users::domain::user_repository::{RepositoryErrors, UserRepository};
 use crate::users::domain::users::User;
+use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
 
 #[derive(Error, Debug)]
 pub enum UserFindErrors {

@@ -3,8 +3,8 @@ use std::sync::Arc;
 
 use shaku::{Component, Interface};
 use thiserror::Error;
+use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
 
-use crate::users::domain::user_repository::{RepositoryErrors, UserRepository};
 
 #[derive(Error, Debug)]
 pub enum UserDeleteErrors {
@@ -33,8 +33,6 @@ pub struct UserDeleteService {
 
 impl UserDelete for UserDeleteService {
     fn delete_by(&self, id: &str) -> Result<(), UserDeleteErrors> {
-        
-        
        self.user_repository.delete_by(id)?;
 
         Ok(())

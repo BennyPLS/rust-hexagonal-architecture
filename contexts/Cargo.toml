@@ -8,11 +8,13 @@ shaku.workspace = true
 
 uuid.workspace = true
 chrono.workspace = true
+regex.workspace = true
 
 serde.workspace = true
 serde_json.workspace = true
 
 argon2.workspace = true
+password-hash.workspace = true
 
 validator.workspace = true
 
@@ -20,4 +22,5 @@ thiserror.workspace = true
 anyhow.workspace = true
 
 sqlite.workspace = true
+regex = "1.10.4"
 
