@@ -1,22 +1,11 @@
-use crate::users::domain::user_id::UserID;
+use thiserror::Error;
+use crate::users::domain::users::user_id::{UserID, UserIDErrors};
+use crate::users::domain::users::user_name::{UserName, UserNameErrors};
 
-#[derive(Debug)]
-pub struct UserName(String);
-
-impl UserName {
-    pub fn new(value: String) -> UserName {
-        UserName(value)
-    }
-}
-
-#[derive(Debug)]
-pub struct UserPassword(String);
-
-impl UserPassword {
-    pub fn new(value: String) -> UserPassword {
-        UserPassword(value)
-    }
-}
+pub mod user_repository;
+pub mod user_name;
+pub mod user_id;
+mod user_password;
 
 #[derive(Debug)]
 pub struct UserEmail(String);
@@ -25,6 +14,20 @@ impl UserEmail {
     pub fn new(value: String) -> UserEmail {
         UserEmail(value)
     }
+}
+
+#[derive(Error, Debug)]
+enum UserErrors {
+    #[error("Failed to validate User ID")]
+    UserIDError {
+        #[source]
+        source: UserIDErrors
+    },
+    #[error("Failed to validate User Name")]
+    UserNameError {
+        #[source]
+        source: UserNameErrors
+    },
 }
 
 #[derive(Debug)]
@@ -47,8 +50,8 @@ impl User {
 
     pub fn create(id: String, name: String, password: String, email: String) -> User {
         User {
-            id: UserID::try_from(id.as_str()).expect("hola"), // TODO: Add good error management.
-            name: UserName::new(name),
+            id: UserID::try_from(id).unwrap(), // TODO: Add good error management.
+            name: UserName::try_from(name).unwrap(),
             password: UserPassword::new(password),
             email: UserEmail::new(email),
         }

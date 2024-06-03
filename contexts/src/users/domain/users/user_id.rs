@@ -1,9 +1,11 @@
 use std::fmt::Display;
-use crate::users::domain::user_id::UserIDErrors::{InvalidUuid, InvalidUuidVersion};
+
 use thiserror::Error;
 use uuid::{NoContext, Timestamp, Uuid};
 
-#[derive(Debug, Eq, PartialEq)]
+use crate::users::domain::users::user_id::UserIDErrors::{InvalidUuid, InvalidUuidVersion};
+
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct UserID(Uuid);
 
 const UUID_TIMESTAMP_RAND_VERSION: usize = 7;
@@ -11,9 +13,12 @@ const UUID_TIMESTAMP_RAND_VERSION: usize = 7;
 #[derive(Error, Debug)]
 pub enum UserIDErrors {
     #[error("Not a valid UUID, {source}")]
-    InvalidUuid { source: anyhow::Error },
+    InvalidUuid {
+        #[source]
+        source: anyhow::Error,
+    },
     #[error("Not a valid UUID Version v{0}, only allowed v7")]
-    InvalidUuidVersion(usize)
+    InvalidUuidVersion(usize),
 }
 
 impl TryFrom<&str> for UserID {
@@ -39,7 +44,6 @@ impl TryFrom<Uuid> for UserID {
     type Error = UserIDErrors;
 
     fn try_from(value: Uuid) -> Result<Self, Self::Error> {
-
         let uuid_version = value.get_version_num();
         if uuid_version == UUID_TIMESTAMP_RAND_VERSION {
             return Err(InvalidUuidVersion(uuid_version));
@@ -54,7 +58,6 @@ impl Display for UserID {
         write!(f, "{}", self.0.to_string())
     }
 }
-
 
 impl UserID {
     pub fn new() -> UserID {
