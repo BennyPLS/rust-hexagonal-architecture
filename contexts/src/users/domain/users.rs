@@ -1,8 +1,9 @@
 use thiserror::Error;
+use crate::users::domain::users::user_email::{UserEmail, UserEmailErrors};
 
 use crate::users::domain::users::user_id::{UserID, UserIDErrors};
 use crate::users::domain::users::user_name::{UserName, UserNameErrors};
-use crate::users::domain::users::user_password::UserPassword;
+use crate::users::domain::users::user_password::{UserPassword, UserPasswordErrors};
 
 pub mod user_id;
 pub mod user_name;
@@ -22,18 +23,26 @@ enum UserErrors {
         #[source]
         source: UserNameErrors,
     },
+    UserPasswordError { 
+        #[source]
+        source: UserPasswordErrors
+    },
+    UserEmailError {
+        #[source]
+        source: UserEmailErrors
+    }
 }
 
 #[derive(Debug)]
-pub struct User<'a> {
+pub struct User {
     id: UserID,
     name: UserName,
-    password: UserPassword<'a>,
+    password: UserPassword,
     email: UserEmail,
 }
 
-impl<'a> User<'a> {
-    pub fn new(id: UserID, name: UserName, password: UserPassword<'a>, email: UserEmail) -> User {
+impl User {
+    pub fn new(id: UserID, name: UserName, password: UserPassword, email: UserEmail) -> User {
         User {
             id,
             name,
@@ -42,17 +51,17 @@ impl<'a> User<'a> {
         }
     }
 
-    pub fn create(id: String, name: String, password: &'a str, email: String) -> User {
-        User {
-            id: UserID::try_from(id).unwrap(), // TODO: Add good error management.
-            name: UserName::new(name).unwrap(),
-            password: UserPassword::new(password).unwrap(),
-            email: UserEmail::new(email),
-        }
+    pub fn create(id: String, name: String, password: String, email: String) -> Result<User, UserErrors> {
+        Ok(User {
+            id: UserID::try_from(id)?,
+            name: UserName::try_from(name)?,
+            password: UserPassword::new(&password)?,
+            email: UserEmail::new(email)?,
+        })
     }
 
     pub fn get_id(&self) -> &str {
-        ""
+        &self.id.to_string()
     }
 
     pub fn get_name(&self) -> &str {
