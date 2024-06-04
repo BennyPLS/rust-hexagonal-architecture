@@ -22,5 +22,3 @@ thiserror.workspace = true
 anyhow.workspace = true
 
 sqlite.workspace = true
-regex = "1.10.4"
-

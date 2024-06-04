@@ -4,7 +4,7 @@ use thiserror::Error;
 use crate::users::domain::users::user_name::UserNameErrors::NotLongEnough;
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct UserName(String);
+pub struct UserName(pub(crate) String);
 
 const MIN_NAME_LENGTH: usize = 5;
 
