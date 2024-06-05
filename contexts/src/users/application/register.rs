@@ -3,7 +3,7 @@ use std::sync::Arc;
 use shaku::{Component, Interface};
 use thiserror::Error;
 
-use crate::users::domain::users::User;
+use crate::users::domain::users::{User, UserErrors};
 use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
 
 #[derive(Error, Debug)]
@@ -12,6 +12,11 @@ pub enum UserRegisterErrors {
     AlreadyExists,
     #[error("The server has found an unexpected situation")]
     InternalServerError,
+    #[error("User validation error")]
+    UserError {
+        #[from]
+        source: UserErrors
+    }
 }
 
 impl From<RepositoryErrors> for UserRegisterErrors {
@@ -26,10 +31,10 @@ impl From<RepositoryErrors> for UserRegisterErrors {
 pub trait UserRegister: Interface {
     fn register(
         &self,
-        uuid: String,
-        name: String,
-        password: String,
-        email: String,
+        uuid: &str,
+        name: &str,
+        password: &str,
+        email: &str,
     ) -> Result<(), UserRegisterErrors>;
 }
 
@@ -43,12 +48,12 @@ pub struct UserRegisterService {
 impl UserRegister for UserRegisterService {
     fn register(
         &self,
-        uuid: String,
-        name: String,
-        password: String,
-        email: String,
+        uuid: &str,
+        name: &str,
+        password: &str,
+        email: &str,
     ) -> Result<(), UserRegisterErrors> {
-        let user = User::create(uuid, name, password, email);
+        let user = User::create(uuid, name, password, email)?;
 
         Ok(self.user_repository.save(&user)?)
     }

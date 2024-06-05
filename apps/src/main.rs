@@ -20,10 +20,10 @@ mod responders;
 
 #[launch]
 async fn rocket() -> Rocket<Build> {
-    let conn = sqlite::init().expect("Couldn't initialize the database.");
+    sqlite::init();
 
     rocket::build()
-        .manage(Box::new(build_sqlite_container(conn).build()))
+        .manage(Box::new(build_sqlite_container().build()))
         .register(
             "/",
             catchers![

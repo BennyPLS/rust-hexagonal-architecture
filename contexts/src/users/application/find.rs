@@ -9,13 +9,19 @@ use crate::users::domain::users::user_repository::{RepositoryErrors, UserReposit
 #[derive(Error, Debug)]
 pub enum UserFindErrors {
     #[error("The server has found an unexpected situation")]
-    InternalServerError,
+    InternalServerError {
+        #[source]
+        source: Option<anyhow::Error>,
+    },
 }
 
 impl From<RepositoryErrors> for UserFindErrors {
     fn from(value: RepositoryErrors) -> Self {
         match value {
-            _ => UserFindErrors::InternalServerError,
+            RepositoryErrors::InternalServerError { source } => {
+                UserFindErrors::InternalServerError { source: Some(source) }
+            }
+            _ => UserFindErrors::InternalServerError { source: None },
         }
     }
 }

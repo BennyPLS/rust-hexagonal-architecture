@@ -1,18 +1,17 @@
-use std::panic::resume_unwind;
-
-use rocket::{post, routes};
+use std::error::Error;
 use rocket::http::Status;
+use rocket::post;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
-use contexts::users::application::delete::UserDelete;
 
+use contexts::users::application::delete::UserDelete;
 use contexts::users::application::find::UserFind;
-use contexts::users::application::register::{UserRegister, UserRegisterErrors};
+use contexts::users::application::register::UserRegister;
 use contexts::users::application::register::UserRegisterErrors::AlreadyExists;
-use contexts::users::application::update::UserUpdate;
-use contexts::users::domain::users::{User, UserEmail, UserID, UserName, UserPassword};
+use contexts::users::application::update::{UserUpdate, UserUpdateErrors};
+use contexts::users::domain::users::User;
 
 use crate::guard::Json;
 use crate::Inject;
@@ -32,6 +31,17 @@ pub struct UserRequest {
     email: String,
 }
 
+#[derive(Debug, Deserialize, Validate, Default)]
+pub struct UserUpdateRequest<'a> {
+    uuid: Uuid,
+    #[validate(length(min = 10))]
+    name: Option<&'a str>,
+    #[serde(rename = "password")]
+    plain_password: Option<&'a str>,
+    #[validate(email)]
+    email: Option<&'a str>,
+}
+
 impl From<User> for UserRequest {
     fn from(value: User) -> Self {
         UserRequest {
@@ -43,14 +53,28 @@ impl From<User> for UserRequest {
     }
 }
 
-impl Into<User> for UserRequest {
-    fn into(self) -> User {
-        User::new(
-            UserID::new(self.uuid.to_string()),
-            UserName::new(self.name),
-            UserPassword::new(self.plain_password),
-            UserEmail::new(self.email),
-        )
+impl From<UserUpdateErrors> for ProblemDetail {
+    fn from(value: UserUpdateErrors) -> Self {
+        match value {
+            UserUpdateErrors::InternalServerError { source } => {
+                let mut err = ProblemDetailBuilder::from(Status::InternalServerError);
+
+                if let Some(source) = source {
+                    err = err.detail(source.to_string());
+                }
+
+                err.build()
+            }
+            UserUpdateErrors::UserError { source } => {
+                let err = ProblemDetailBuilder::from(Status::UnprocessableEntity)
+                    .detail(source.to_string());
+                
+                err.build()
+            }
+            UserUpdateErrors::NotFound => ProblemDetailBuilder::from(Status::NotFound)
+                .detail(UserUpdateErrors::NotFound.to_string())
+                .build(),
+        }
     }
 }
 
@@ -62,10 +86,10 @@ pub fn user_register(
     let user = new_user.into_inner();
 
     let result = register_service.register(
-        user.uuid.to_string(),
-        user.name,
-        user.plain_password,
-        user.email,
+        &user.uuid.to_string(),
+        &user.name,
+        &user.plain_password,
+        &user.email,
     );
 
     if let Err(err) = result {
@@ -100,23 +124,25 @@ pub fn user_get(
 ) -> Result<JsonResponse<UserRequest>, ProblemDetail> {
     match user_service.find_by(&uuid) {
         Some(user) => Ok(JsonResponse::ok(UserRequest::from(user))),
-        None => Err(ProblemDetail::from(Status::NotFound))
+        None => Err(ProblemDetail::from(Status::NotFound)),
     }
 }
 
 #[put("/", data = "<updated_user>")]
 pub fn user_update(
-    updated_user: Json<UserRequest>,
+    updated_user: Json<UserUpdateRequest>,
     update_service: Inject<'_, dyn UserUpdate>,
 ) -> Result<Status, ProblemDetail> {
-    let user: User = updated_user.into_inner().into();
+    let user = updated_user.into_inner();
 
-    let result = update_service.update(&user);
+    let result = update_service.update(
+        &user.uuid.to_string(),
+        user.name,
+        user.plain_password,
+        user.email,
+    )?;
 
-    match result {
-        Ok(_) => Ok(Status::NoContent),
-        Err(_) => Err(ProblemDetail::from(Status::InternalServerError)),
-    }
+    Ok(Status::NoContent)
 }
 
 #[delete("/<uuid>")]

@@ -1,9 +1,14 @@
-use crate::users::domain::user_id::UserID;
+use std::sync::Arc;
 use shaku::Component;
-use sqlite::{ConnectionThreadSafe, Error, State, Statement};
+use sqlite::{Error, State, Statement};
 
-use crate::users::domain::user_repository::{RepositoryErrors, UserRepository};
-use crate::users::domain::users::{User, UserEmail, UserName, UserPassword};
+use crate::users::domain::users::User;
+use crate::users::domain::users::user_email::UserEmail;
+use crate::users::domain::users::user_id::UserID;
+use crate::users::domain::users::user_name::UserName;
+use crate::users::domain::users::user_password::UserPassword;
+use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
+use crate::users::infrastructure::sqlite::Database;
 
 impl From<Error> for RepositoryErrors {
     fn from(value: Error) -> Self {
@@ -30,30 +35,37 @@ fn get_user(statement: &Statement) -> User {
         UserID::try_from(
             statement
                 .read::<String, _>(0)
-                .expect("Expected String User ID").as_str(),
-        ).unwrap(), // TODO: Change Error Management
-        UserName::new(
+                .expect("Expected String User ID")
+                .as_str(),
+        )
+        .unwrap(),
+        UserName::try_from(
             statement
                 .read::<String, _>(1)
                 .expect("Expected String User Name"),
-        ),
-        UserPassword::new(
+        )
+        .unwrap(),
+        UserPassword::try_from(
             statement
                 .read::<String, _>(2)
-                .expect("Expected String User Password"),
-        ),
-        UserEmail::new(
+                .expect("Expected String User Password")
+                .as_str(),
+        )
+        .unwrap(),
+        UserEmail::try_from(
             statement
                 .read::<String, _>(3)
                 .expect("Expected String User Email"),
-        ),
+        )
+        .unwrap(),
     )
 }
 
 #[derive(Component)]
 #[shaku(interface = UserRepository)]
 pub struct UserRepositorySQLite {
-    connection: ConnectionThreadSafe,
+    #[shaku(inject)]
+    database: Arc<dyn Database>,
 }
 // language=SQL
 const STMT_INSERT: &str = "INSERT INTO users (id, name, password, email) VALUES (?, ?, ?, ?)";
@@ -68,9 +80,11 @@ const STMT_DELETE: &str = "DELETE FROM users WHERE id = ?";
 
 impl UserRepository for UserRepositorySQLite {
     fn save(&self, user: &User) -> Result<(), RepositoryErrors> {
-        let mut stmt = self.connection.prepare(STMT_INSERT)?;
+        let conn = self.database.get_connection();
 
-        stmt.bind((1, user.get_id()))?;
+        let mut stmt = conn.prepare(STMT_INSERT)?;
+
+        stmt.bind((1, user.get_id().as_str()))?;
         stmt.bind((2, user.get_name()))?;
         stmt.bind((3, user.get_password()))?;
         stmt.bind((4, user.get_email()))?;
@@ -81,7 +95,9 @@ impl UserRepository for UserRepositorySQLite {
     }
 
     fn find_by(&self, id: &str) -> Option<User> {
-        let mut stmt = self.connection.prepare(STMT_FIND_BY_ID).ok()?;
+        let conn = self.database.get_connection();
+
+        let mut stmt = conn.prepare(STMT_FIND_BY_ID).ok()?;
 
         stmt.bind((1, id)).ok()?;
 
@@ -93,7 +109,9 @@ impl UserRepository for UserRepositorySQLite {
     }
 
     fn get_all(&self) -> Vec<User> {
-        let stmt = self.connection.prepare(STMT_GET_ALL);
+        let conn = self.database.get_connection();
+
+        let stmt = conn.prepare(STMT_GET_ALL);
 
         if stmt.is_err() {
             return vec![];
@@ -110,7 +128,9 @@ impl UserRepository for UserRepositorySQLite {
     }
 
     fn delete_by(&self, id: &str) -> Result<(), RepositoryErrors> {
-        let mut stmt = self.connection.prepare(STMT_DELETE)?;
+        let conn = self.database.get_connection();
+
+        let mut stmt = conn.prepare(STMT_DELETE)?;
 
         dbg!(id);
 
@@ -122,12 +142,14 @@ impl UserRepository for UserRepositorySQLite {
     }
 
     fn update(&self, user: &User) -> Result<(), RepositoryErrors> {
-        let mut stmt = self.connection.prepare(STMT_UPDATE)?;
+        let conn = self.database.get_connection();
+
+        let mut stmt = conn.prepare(STMT_UPDATE)?;
 
         stmt.bind((1, user.get_name()))?;
         stmt.bind((2, user.get_password()))?;
         stmt.bind((3, user.get_email()))?;
-        stmt.bind((4, user.get_id()))?;
+        stmt.bind((4, user.get_id().as_str()))?;
 
         stmt.next()?;
 

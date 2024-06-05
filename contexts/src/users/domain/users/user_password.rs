@@ -4,21 +4,32 @@ use password_hash::{PasswordHash, PasswordHasher, SaltString};
 use regex::Regex;
 use thiserror::Error;
 
-use crate::users::domain::users::user_password::UserPasswordErrors::{Missing, NotLongEnough, PHCFormatError};
+use crate::users::domain::users::user_password::UserPasswordErrors::{
+    Missing, NotLongEnough, PHCFormatError,
+};
 
-const ARGON2: Argon2 = Argon2::default();
-
-fn hash_password_with_salt(password: String) -> String {
+fn hash_password_with_salt(password: &str) -> String {
     let salt = SaltString::generate(&mut OsRng);
 
-    ARGON2
-        .hash_password(password.as_bytes(), &salt)?
+    Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .unwrap()
         .to_string()
 }
 
 const MIN_PASSWORD_LENGTH: usize = 8;
-const SYMBOL_REGEX: Regex = Regex::new(r"^.*(?=.*[!@#$%^&*()_+?/:;\[\]{}|<>.,]).*$").unwrap();
-const NUMBER_REGEX: Regex = Regex::new(r"^.*(?=.*\d).*$").unwrap();
+
+fn has_number(haystack: &str) -> bool {
+    let regex = Regex::new(r"^.*(?=.*\d).*$").unwrap();
+
+    regex.is_match(haystack)
+}
+
+fn has_symbol(haystack: &str) -> bool {
+    let regex = Regex::new(r"^.*(?=.*[!@#$%^&*()_+?/:;\[\]{}|<>.,]).*$").unwrap();
+
+    regex.is_match(haystack)
+}
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct UserPassword(pub(crate) String);
@@ -32,8 +43,8 @@ pub enum UserPasswordErrors {
     #[error("PHC Format Error, {source}")]
     PHCFormatError {
         #[source]
-        source: anyhow::Error
-    }
+        source: anyhow::Error,
+    },
 }
 
 impl TryFrom<&str> for UserPassword {
@@ -44,7 +55,7 @@ impl TryFrom<&str> for UserPassword {
 
         match res {
             Ok(ok) => Ok(UserPassword(ok.to_string())),
-            Err(err) => Err(PHCFormatError {source: anyhow::Error::from(err)})
+            Err(err) => Err(PHCFormatError { source: anyhow::Error::from(err) }),
         }
     }
 }
@@ -56,15 +67,15 @@ impl UserPassword {
             return Err(NotLongEnough(length));
         }
 
-        if !SYMBOL_REGEX.is_match(password) {
+        if has_symbol(password) {
             return Err(Missing("Symbols"));
         }
 
-        if !NUMBER_REGEX.is_match(password) {
+        if has_number(password) {
             return Err(Missing("Numbers"));
         }
 
-        let password_hash = Self::hash_password_with_salt(password);
+        let password_hash = hash_password_with_salt(password);
 
         Ok(UserPassword(password_hash))
     }
