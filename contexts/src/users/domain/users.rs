@@ -23,10 +23,12 @@ enum UserErrors {
         #[source]
         source: UserNameErrors,
     },
+    #[error("Failed to validate User Password")]
     UserPasswordError { 
         #[source]
         source: UserPasswordErrors
     },
+    #[error("Failed to validate User Email")]
     UserEmailError {
         #[source]
         source: UserEmailErrors
