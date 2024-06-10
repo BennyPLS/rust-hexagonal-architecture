@@ -11,19 +11,26 @@ pub enum UserRegisterErrors {
     #[error("The user that is trying to register is already registered")]
     AlreadyExists,
     #[error("The server has found an unexpected situation")]
-    InternalServerError,
+    InternalServerError {
+        #[source]
+        source: Option<anyhow::Error>,
+    },
     #[error("User validation error")]
     UserError {
         #[from]
-        source: UserErrors
-    }
+        source: UserErrors,
+    },
 }
 
 impl From<RepositoryErrors> for UserRegisterErrors {
     fn from(value: RepositoryErrors) -> Self {
         match value {
             RepositoryErrors::AlreadyExists => UserRegisterErrors::AlreadyExists,
-            RepositoryErrors::InternalServerError { .. } => UserRegisterErrors::InternalServerError,
+            RepositoryErrors::InternalServerError { source } => {
+                UserRegisterErrors::InternalServerError {
+                    source: Some(source),
+                }
+            }
         }
     }
 }

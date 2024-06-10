@@ -1,4 +1,5 @@
-use std::error::Error;
+use std::iter::successors;
+
 use rocket::http::Status;
 use rocket::post;
 use serde::{Deserialize, Serialize};
@@ -8,10 +9,10 @@ use validator::Validate;
 
 use contexts::users::application::delete::UserDelete;
 use contexts::users::application::find::UserFind;
-use contexts::users::application::register::UserRegister;
+use contexts::users::application::register::{UserRegister, UserRegisterErrors};
 use contexts::users::application::register::UserRegisterErrors::AlreadyExists;
 use contexts::users::application::update::{UserUpdate, UserUpdateErrors};
-use contexts::users::domain::users::User;
+use contexts::users::domain::users::{User, UserErrors};
 
 use crate::guard::Json;
 use crate::Inject;
@@ -23,7 +24,7 @@ pub const BASE_URL: &str = "/users";
 #[derive(Debug, Serialize, Deserialize, Validate, Default)]
 pub struct UserRequest {
     uuid: Uuid,
-    #[validate(length(min = 10))]
+    #[validate(length(min = 5))]
     name: String,
     #[serde(rename = "password")]
     plain_password: String,
@@ -53,6 +54,53 @@ impl From<User> for UserRequest {
     }
 }
 
+impl From<UserErrors> for ProblemDetail {
+    fn from(value: UserErrors) -> Self {
+        match value {
+            UserErrors::UserIDError { source } => {
+                ProblemDetailBuilder::from(Status::UnprocessableEntity)
+                    .detail(source.to_string())
+                    .build()
+            }
+            UserErrors::UserNameError { source } => {
+                ProblemDetailBuilder::from(Status::UnprocessableEntity)
+                    .detail(source.to_string())
+                    .build()
+            }
+            UserErrors::UserPasswordError { source } => {
+                ProblemDetailBuilder::from(Status::UnprocessableEntity)
+                    .detail(source.to_string())
+                    .build()
+            }
+            UserErrors::UserEmailError { source } => {
+                ProblemDetailBuilder::from(Status::UnprocessableEntity)
+                    .detail(source.to_string())
+                    .build()
+            }
+        }
+    }
+}
+
+impl From<UserRegisterErrors> for ProblemDetail {
+    fn from(value: UserRegisterErrors) -> Self {
+        match value {
+            AlreadyExists => ProblemDetailBuilder::from(Status::Conflict)
+                .detail("The uuid for the user trying to register, is already registered.")
+                .build(),
+            UserRegisterErrors::InternalServerError { source } => {
+                let mut err = ProblemDetailBuilder::from(Status::InternalServerError);
+
+                if let Some(source) = source {
+                    err = err.detail(source.to_string());
+                }
+
+                err.build()
+            }
+            UserRegisterErrors::UserError { source } => ProblemDetail::from(source),
+        }
+    }
+}
+
 impl From<UserUpdateErrors> for ProblemDetail {
     fn from(value: UserUpdateErrors) -> Self {
         match value {
@@ -65,12 +113,7 @@ impl From<UserUpdateErrors> for ProblemDetail {
 
                 err.build()
             }
-            UserUpdateErrors::UserError { source } => {
-                let err = ProblemDetailBuilder::from(Status::UnprocessableEntity)
-                    .detail(source.to_string());
-                
-                err.build()
-            }
+            UserUpdateErrors::UserError { source } => ProblemDetail::from(source),
             UserUpdateErrors::NotFound => ProblemDetailBuilder::from(Status::NotFound)
                 .detail(UserUpdateErrors::NotFound.to_string())
                 .build(),
@@ -85,23 +128,12 @@ pub fn user_register(
 ) -> Result<Status, ProblemDetail> {
     let user = new_user.into_inner();
 
-    let result = register_service.register(
+    register_service.register(
         &user.uuid.to_string(),
         &user.name,
         &user.plain_password,
         &user.email,
-    );
-
-    if let Err(err) = result {
-        return if let AlreadyExists = err {
-            Err(ProblemDetailBuilder::from(Status::Conflict)
-                .detail("The uuid for the user trying to register, is already registered.")
-                .add_extension("uuid", json!(user.uuid))
-                .build())
-        } else {
-            Err(ProblemDetail::from(Status::InternalServerError))
-        };
-    }
+    )?;
 
     Ok(Status::Created)
 }
@@ -134,8 +166,8 @@ pub fn user_update(
     update_service: Inject<'_, dyn UserUpdate>,
 ) -> Result<Status, ProblemDetail> {
     let user = updated_user.into_inner();
-
-    let result = update_service.update(
+    
+    update_service.update(
         &user.uuid.to_string(),
         user.name,
         user.plain_password,

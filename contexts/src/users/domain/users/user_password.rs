@@ -20,13 +20,13 @@ fn hash_password_with_salt(password: &str) -> String {
 const MIN_PASSWORD_LENGTH: usize = 8;
 
 fn has_number(haystack: &str) -> bool {
-    let regex = Regex::new(r"^.*(?=.*\d).*$").unwrap();
+    let regex = Regex::new(r"^.*(\d).*$").unwrap();
 
     regex.is_match(haystack)
 }
 
 fn has_symbol(haystack: &str) -> bool {
-    let regex = Regex::new(r"^.*(?=.*[!@#$%^&*()_+?/:;\[\]{}|<>.,]).*$").unwrap();
+    let regex = Regex::new(r"^.*[!@#$%^&*()_+?/:;\[\]{}|<>.,].*$").unwrap();
 
     regex.is_match(haystack)
 }
@@ -67,11 +67,11 @@ impl UserPassword {
             return Err(NotLongEnough(length));
         }
 
-        if has_symbol(password) {
+        if !has_symbol(password) {
             return Err(Missing("Symbols"));
         }
 
-        if has_number(password) {
+        if !has_number(password) {
             return Err(Missing("Numbers"));
         }
 

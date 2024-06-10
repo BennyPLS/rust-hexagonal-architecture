@@ -6,7 +6,7 @@ use crate::users::domain::users::user_name::UserNameErrors::NotLongEnough;
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct UserName(pub(crate) String);
 
-const MIN_NAME_LENGTH: usize = 5;
+pub const MIN_NAME_LENGTH: usize = 5;
 
 #[derive(Error, Debug)]
 pub enum UserNameErrors {
@@ -19,7 +19,7 @@ impl TryFrom<&str> for UserName {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let length = value.chars().count();
-        if length > MIN_NAME_LENGTH {
+        if length < MIN_NAME_LENGTH {
             return Err(NotLongEnough(length));
         }
 
@@ -32,7 +32,7 @@ impl TryFrom<String> for UserName {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let length = value.chars().count();
-        if length > MIN_NAME_LENGTH {
+        if length < MIN_NAME_LENGTH {
             return Err(NotLongEnough(length));
         }
 

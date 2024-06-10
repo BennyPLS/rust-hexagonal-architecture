@@ -20,8 +20,8 @@ pub struct ProblemDetail {
     extensions: HashMap<String, serde_json::Value>,
 }
 
-impl ProblemDetail {
-    pub fn from(status: Status) -> ProblemDetail {
+impl From<Status> for ProblemDetail {
+    fn from(status: Status) -> ProblemDetail {
         ProblemDetail {
             r#type: String::from("about:blank"),
             status,
@@ -31,7 +31,9 @@ impl ProblemDetail {
             extensions: HashMap::new(),
         }
     }
+}
 
+impl ProblemDetail {
     pub fn builder() -> ProblemDetailBuilder {
         ProblemDetailBuilder::default()
     }

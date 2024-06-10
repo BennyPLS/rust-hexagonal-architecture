@@ -3,7 +3,7 @@ use sqlite::ConnectionThreadSafe;
 
 pub mod user_repository_sqlite;
 
-pub trait Database: Interface  {
+pub trait Database: Interface {
     fn get_connection(&self) -> ConnectionThreadSafe;
 }
 
@@ -18,10 +18,15 @@ CREATE TABLE users (
 )"#;
 
 pub fn init() {
-    sqlite::Connection::open_thread_safe(DATABASE_FILE)
+    let result = sqlite::Connection::open_thread_safe(DATABASE_FILE)
         .expect("Couldn't connect to the database")
-        .execute(SQL_TABLE_USERS)
-        .expect("Tried to create User Table failed.");
+        .execute(SQL_TABLE_USERS);
+
+    if let Err(err) = result {
+        if err.code.unwrap() != 1 {
+            panic!("Database couldn't be initialized.")
+        }
+    }
 }
 
 #[derive(Component)]

@@ -5,7 +5,7 @@ Content-Type: application/json
 {
   "uuid": "502a4267-ddcd-4ab3-ac03-68587d2c3d65",
   "name": "John Doe Especial",
-  "password": "password123",
+  "password": "password_123",
   "email": "john.doe@example.com"
 }
 
@@ -21,9 +21,7 @@ Content-Type: application/json
 
 {
   "uuid": "502a4267-ddcd-4ab3-ac03-68587d2c3d65",
-  "name": "Jane Doe Not Especial",
-  "password": "newpassword123",
-  "email": "jane.doe@example.com"
+  "name": "Jane Doe Not Especial"
 }
 
 ### Deletes a user by id

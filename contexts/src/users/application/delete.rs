@@ -1,21 +1,28 @@
-
 use std::sync::Arc;
 
 use shaku::{Component, Interface};
 use thiserror::Error;
-use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
 
+use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
 
 #[derive(Error, Debug)]
 pub enum UserDeleteErrors {
     #[error("The server has found an unexpected situation")]
-    InternalServerError,
+    InternalServerError {
+        #[source]
+        source: Option<anyhow::Error>,
+    },
 }
 
 impl From<RepositoryErrors> for UserDeleteErrors {
     fn from(value: RepositoryErrors) -> Self {
         match value {
-            _ => UserDeleteErrors::InternalServerError,
+            RepositoryErrors::InternalServerError { source } => {
+                UserDeleteErrors::InternalServerError {
+                    source: Some(source),
+                }
+            }
+            _ => UserDeleteErrors::InternalServerError { source: None },
         }
     }
 }
@@ -33,7 +40,7 @@ pub struct UserDeleteService {
 
 impl UserDelete for UserDeleteService {
     fn delete_by(&self, id: &str) -> Result<(), UserDeleteErrors> {
-       self.user_repository.delete_by(id)?;
+        self.user_repository.delete_by(id)?;
 
         Ok(())
     }

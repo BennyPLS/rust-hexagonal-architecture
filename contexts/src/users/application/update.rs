@@ -60,6 +60,7 @@ pub trait UserUpdate: Interface {
 pub struct UserUpdateService {
     #[shaku(inject)]
     user_repository: Arc<dyn UserRepository>,
+    #[shaku(inject)]
     user_find_service: Arc<dyn UserFind>,
 }
 
@@ -78,7 +79,7 @@ impl UserUpdate for UserUpdateService {
         } else {
             return Err(NotFound);
         };
-
+        
         self.user_repository.update(&user)?;
 
         Ok(())

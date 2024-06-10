@@ -1,4 +1,5 @@
 use std::sync::Arc;
+
 use shaku::Component;
 use sqlite::{Error, State, Statement};
 
@@ -38,26 +39,26 @@ fn get_user(statement: &Statement) -> User {
                 .expect("Expected String User ID")
                 .as_str(),
         )
-        .unwrap(),
+        .expect("Invalid Database UserID"),
         UserName::try_from(
             statement
                 .read::<String, _>(1)
                 .expect("Expected String User Name"),
         )
-        .unwrap(),
+        .expect("Invalid Database UserName"),
         UserPassword::try_from(
             statement
                 .read::<String, _>(2)
                 .expect("Expected String User Password")
                 .as_str(),
         )
-        .unwrap(),
+        .expect("Invalid Database UserPassword"),
         UserEmail::try_from(
             statement
                 .read::<String, _>(3)
                 .expect("Expected String User Email"),
         )
-        .unwrap(),
+        .expect("Invalid Database UserEmail"),
     )
 }
 
@@ -74,7 +75,7 @@ const STMT_FIND_BY_ID: &str = "SELECT * FROM users WHERE id = ?";
 // language=SQL
 const STMT_GET_ALL: &str = "SELECT * FROM users";
 // language=SQL
-const STMT_UPDATE: &str = "UPDATE users SET name = ? AND password = ? AND email = ? WHERE id = ?";
+const STMT_UPDATE: &str = "UPDATE users SET name = ?, password = ?, email = ? WHERE id = ?";
 // language=SQL
 const STMT_DELETE: &str = "DELETE FROM users WHERE id = ?";
 
@@ -145,6 +146,8 @@ impl UserRepository for UserRepositorySQLite {
         let conn = self.database.get_connection();
 
         let mut stmt = conn.prepare(STMT_UPDATE)?;
+
+        dbg!(&user);
 
         stmt.bind((1, user.get_name()))?;
         stmt.bind((2, user.get_password()))?;
