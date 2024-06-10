@@ -1,8 +1,8 @@
 use argon2::Argon2;
 use password_hash::rand_core::OsRng;
 use password_hash::{PasswordHash, PasswordHasher, SaltString};
-use regex::Regex;
 use thiserror::Error;
+use crate::shared::domain::regex::{has_number, has_symbol};
 
 use crate::users::domain::users::user_password::UserPasswordErrors::{
     Missing, NotLongEnough, PHCFormatError,
@@ -18,18 +18,6 @@ fn hash_password_with_salt(password: &str) -> String {
 }
 
 const MIN_PASSWORD_LENGTH: usize = 8;
-
-fn has_number(haystack: &str) -> bool {
-    let regex = Regex::new(r"^.*(\d).*$").unwrap();
-
-    regex.is_match(haystack)
-}
-
-fn has_symbol(haystack: &str) -> bool {
-    let regex = Regex::new(r"^.*[!@#$%^&*()_+?/:;\[\]{}|<>.,].*$").unwrap();
-
-    regex.is_match(haystack)
-}
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct UserPassword(pub(crate) String);
@@ -54,9 +42,17 @@ impl TryFrom<&str> for UserPassword {
         let res = PasswordHash::try_from(value);
 
         match res {
-            Ok(ok) => Ok(UserPassword(ok.to_string())),
+            Ok(phc_string) => Ok(UserPassword(phc_string.to_string())),
             Err(err) => Err(PHCFormatError { source: anyhow::Error::from(err) }),
         }
+    }
+}
+
+impl TryFrom<String> for UserPassword {
+    type Error = UserPasswordErrors;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        UserPassword::try_from(value.as_str())
     }
 }
 

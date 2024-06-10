@@ -35,7 +35,7 @@ pub struct UserRequest {
 #[derive(Debug, Deserialize, Validate, Default)]
 pub struct UserUpdateRequest<'a> {
     uuid: Uuid,
-    #[validate(length(min = 10))]
+    #[validate(length(min = 10, max = 50))]
     name: Option<&'a str>,
     #[serde(rename = "password")]
     plain_password: Option<&'a str>,
@@ -166,7 +166,7 @@ pub fn user_update(
     update_service: Inject<'_, dyn UserUpdate>,
 ) -> Result<Status, ProblemDetail> {
     let user = updated_user.into_inner();
-    
+
     update_service.update(
         &user.uuid.to_string(),
         user.name,

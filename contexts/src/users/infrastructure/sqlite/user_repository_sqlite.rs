@@ -148,7 +148,7 @@ impl UserRepository for UserRepositorySQLite {
         let mut stmt = conn.prepare(STMT_UPDATE)?;
 
         dbg!(&user);
-
+        
         stmt.bind((1, user.get_name()))?;
         stmt.bind((2, user.get_password()))?;
         stmt.bind((3, user.get_email()))?;

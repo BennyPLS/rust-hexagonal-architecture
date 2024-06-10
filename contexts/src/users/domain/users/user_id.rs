@@ -21,6 +21,14 @@ pub enum UserIDErrors {
     InvalidUuidVersion(usize),
 }
 
+impl TryFrom<String> for UserID {
+    type Error = UserIDErrors;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        UserID::try_from(value.as_str())
+    }
+}
+
 impl TryFrom<&str> for UserID {
     type Error = UserIDErrors;
 
@@ -45,6 +53,7 @@ impl TryFrom<Uuid> for UserID {
 
     fn try_from(value: Uuid) -> Result<Self, Self::Error> {
         let uuid_version = value.get_version_num();
+        
         if uuid_version == UUID_TIMESTAMP_RAND_VERSION {
             return Err(InvalidUuidVersion(uuid_version));
         }

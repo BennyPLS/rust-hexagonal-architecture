@@ -9,12 +9,13 @@ pub trait Database: Interface {
 
 const DATABASE_FILE: &str = "database.sqlite";
 
+// language=SQL
 const SQL_TABLE_USERS: &str = r#"
 CREATE TABLE users (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    password TEXT,
-    email TEXT
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    password TEXT NOT NULL,
+    email TEXT NOT NULL
 )"#;
 
 pub fn init() {

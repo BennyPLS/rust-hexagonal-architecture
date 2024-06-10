@@ -31,12 +31,7 @@ impl TryFrom<String> for UserName {
     type Error = UserNameErrors;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        let length = value.chars().count();
-        if length < MIN_NAME_LENGTH {
-            return Err(NotLongEnough(length));
-        }
-
-        Ok(UserName(value))
+        UserName::try_from(value.as_str())
     }
 }
 
@@ -48,12 +43,7 @@ impl Display for UserName {
 
 impl UserName {
     pub fn new(value: String) -> Result<UserName, UserNameErrors> {
-        let length = value.chars().count();
-        if length > MIN_NAME_LENGTH {
-            return Err(NotLongEnough(length));
-        }
-
-        Ok(UserName(value))
+        UserName::try_from(value.as_str())
     }
 
     pub fn into_inner(self) -> String {
