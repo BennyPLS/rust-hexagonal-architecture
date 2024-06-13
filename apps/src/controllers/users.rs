@@ -1,55 +1,69 @@
-use std::iter::successors;
-
+use garde::Validate;
 use rocket::http::Status;
 use rocket::post;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use uuid::Uuid;
-use validator::Validate;
 
 use contexts::users::application::delete::UserDelete;
 use contexts::users::application::find::UserFind;
-use contexts::users::application::register::{UserRegister, UserRegisterErrors};
 use contexts::users::application::register::UserRegisterErrors::AlreadyExists;
+use contexts::users::application::register::{UserRegister, UserRegisterErrors};
 use contexts::users::application::update::{UserUpdate, UserUpdateErrors};
 use contexts::users::domain::users::{User, UserErrors};
 
 use crate::guard::Json;
-use crate::Inject;
-use crate::responders::JsonResponse;
 use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
+use crate::responders::JsonResponse;
+use crate::Inject;
 
 pub const BASE_URL: &str = "/users";
 
-#[derive(Debug, Serialize, Deserialize, Validate, Default)]
-pub struct UserRequest {
-    uuid: Uuid,
-    #[validate(length(min = 5))]
+#[derive(Debug, Deserialize, Validate, Default)]
+#[garde(allow_unvalidated)]
+pub struct UserRequest<'a> {
+    // language=RegExp
+    #[garde(pattern(
+        r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    ))]
+    uuid: &'a str,
+    #[garde(length(chars, min = 8))]
+    name: &'a str,
+    // language=RegExp
+    #[garde(length(chars, min = 8), pattern(r"\d.*[\W_]|[\W_].*\d"))]
+    #[serde(rename = "password")]
+    pub(crate) password: &'a str,
+    #[garde(email)]
+    email: &'a str,
+}
+
+#[derive(Debug, Serialize)]
+pub struct UserResponse {
+    uuid: String,
     name: String,
     #[serde(rename = "password")]
-    plain_password: String,
-    #[validate(email)]
+    password: String,
     email: String,
 }
 
 #[derive(Debug, Deserialize, Validate, Default)]
 pub struct UserUpdateRequest<'a> {
+    #[garde(skip)]
     uuid: Uuid,
-    #[validate(length(min = 10, max = 50))]
+    #[garde(skip)]
     name: Option<&'a str>,
-    #[serde(rename = "password")]
-    plain_password: Option<&'a str>,
-    #[validate(email)]
+    #[garde(skip)]
+    password: Option<&'a str>,
+    #[garde(skip)]
     email: Option<&'a str>,
 }
 
-impl From<User> for UserRequest {
+impl From<User> for UserResponse {
     fn from(value: User) -> Self {
-        UserRequest {
-            uuid: value.get_id().parse().unwrap(),
-            name: value.get_name().to_string(),
-            plain_password: value.get_password().to_string(),
-            email: value.get_email().to_string(),
+        UserResponse {
+            uuid: value.get_id(),
+            name: value.get_name().to_owned(),
+            password: value.get_password().to_owned(),
+            email: value.get_email().to_owned(),
         }
     }
 }
@@ -131,7 +145,7 @@ pub fn user_register(
     register_service.register(
         &user.uuid.to_string(),
         &user.name,
-        &user.plain_password,
+        &user.password,
         &user.email,
     )?;
 
@@ -139,12 +153,12 @@ pub fn user_register(
 }
 
 #[get("/")]
-pub fn user_get_all(user_service: Inject<'_, dyn UserFind>) -> JsonResponse<Vec<UserRequest>> {
+pub fn user_get_all(user_service: Inject<'_, dyn UserFind>) -> JsonResponse<Vec<UserResponse>> {
     JsonResponse::ok(
         user_service
             .get_all()
             .into_iter()
-            .map(UserRequest::from)
+            .map(UserResponse::from)
             .collect(),
     )
 }
@@ -153,9 +167,9 @@ pub fn user_get_all(user_service: Inject<'_, dyn UserFind>) -> JsonResponse<Vec<
 pub fn user_get(
     uuid: String,
     user_service: Inject<'_, dyn UserFind>,
-) -> Result<JsonResponse<UserRequest>, ProblemDetail> {
+) -> Result<JsonResponse<UserResponse>, ProblemDetail> {
     match user_service.find_by(&uuid) {
-        Some(user) => Ok(JsonResponse::ok(UserRequest::from(user))),
+        Some(user) => Ok(JsonResponse::ok(UserResponse::from(user))),
         None => Err(ProblemDetail::from(Status::NotFound)),
     }
 }
@@ -170,7 +184,7 @@ pub fn user_update(
     update_service.update(
         &user.uuid.to_string(),
         user.name,
-        user.plain_password,
+        user.password,
         user.email,
     )?;
 

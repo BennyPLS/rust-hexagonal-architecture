@@ -1,3 +1,5 @@
+use garde::Validate;
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use rocket::data::{FromData, Limits, Outcome};
@@ -8,14 +10,13 @@ use serde::Deserialize;
 use serde_json::error::Category;
 use serde_json::json;
 use thiserror::Error;
-use validator::{Validate, ValidationErrors};
 
 #[derive(Debug, Error)]
 pub enum JsonValidationError {
     #[error("Validation failed")]
     Validation {
         #[from]
-        source: ValidationErrors,
+        source: garde::Report,
     },
     #[error("Body empty")]
     EmptyBody,
@@ -34,7 +35,7 @@ pub enum JsonValidationError {
 }
 
 pub enum JsonGuardErrors<'a> {
-    ValidationError(&'a ValidationErrors),
+    ValidationError(&'a garde::Report),
     BodyEmpty,
     ParseError(&'a serde_json::Error),
     IO(&'a std::io::Error),
@@ -46,11 +47,19 @@ impl<'a> JsonGuardErrors<'a> {
 
         match self {
             JsonGuardErrors::ValidationError(errors) => {
-                for (field, field_errors) in errors.field_errors() {
-                    for err in field_errors {
-                        extensions.insert(format!("{}_{}", field, err.code), json!(err.params));
-                    }
+                let mut list = vec![];
+                dbg!(errors);
+
+                for (field, error) in errors.iter() {
+                    let mut err = HashMap::new();
+
+                    err.insert("field", field.to_string());
+                    err.insert("details", error.to_string());
+
+                    list.push(err);
                 }
+
+                extensions.insert("validation_errors".to_string(), json!(list));
             }
             JsonGuardErrors::ParseError(serde_error) => {
                 extensions.insert("parse_error".to_string(), json!(serde_error.to_string()));
@@ -77,10 +86,7 @@ impl<T> Json<T> {
 }
 
 #[rocket::async_trait]
-impl<'r, T> FromData<'r> for Json<T>
-where
-    T: Deserialize<'r> + Validate,
-{
+impl<'r, T: Deserialize<'r> + Validate<Context=impl Default>> FromData<'r> for Json<T> {
     type Error = JsonValidationError;
 
     async fn from_data(req: &'r Request<'_>, data: Data<'r>) -> Outcome<'r, Self> {

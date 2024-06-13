@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate rocket;
 
+use garde::Validate;
 use rocket::{Build, Rocket};
 
 use contexts::shared::infrastructure::dependency_container::{
@@ -35,5 +36,21 @@ async fn rocket() -> Rocket<Build> {
                 handlers::internal_error_server,
             ],
         )
-        .mount(users::BASE_URL, routes![users::user_register, users::user_get, users::user_get_all, users::user_update, users::user_delete])
+        .mount(
+            users::BASE_URL,
+            routes![
+                users::user_register,
+                users::user_get,
+                users::user_get_all,
+                users::user_update,
+                users::user_delete
+            ],
+        )
+}
+
+fn option_create<T: Validate<Context=impl Default>>(val: T) -> T
+{
+    val.validate();
+
+    val
 }
