@@ -2,6 +2,7 @@ use shaku::Interface;
 use thiserror::Error;
 
 use crate::users::domain::users::User;
+use crate::users::domain::users::user_id::UserID;
 
 #[derive(Error, Debug)]
 pub enum RepositoryErrors {
@@ -18,8 +19,8 @@ type UserRepositoryResult<T> = Result<T, RepositoryErrors>;
 
 pub trait UserRepository: Interface {
     fn save(&self, user: &User) -> UserRepositoryResult<()>;
-    fn find_by(&self, id: &str) -> Option<User>;
+    fn find_by(&self, id: &UserID) -> Option<User>;
     fn get_all(&self) -> Vec<User>;
-    fn delete_by(&self, id: &str) -> UserRepositoryResult<()>;
+    fn delete_by(&self, id: &UserID) -> UserRepositoryResult<()>;
     fn update(&self, user: &User) -> UserRepositoryResult<()>;
 }

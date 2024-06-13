@@ -1,8 +1,9 @@
+#[allow(dead_code)]
 use std::io::Cursor;
 
-use rocket::{Request, Response};
 use rocket::http::{ContentType, Status};
 use rocket::response::Responder;
+use rocket::{Request, Response};
 use serde::Serialize;
 
 pub mod problem_detail;
@@ -13,6 +14,7 @@ pub struct JsonResponse<T: Serialize> {
 }
 
 impl<T: Serialize> JsonResponse<T> {
+    #[allow(dead_code)]
     pub fn new(body: T, status: Status) -> JsonResponse<T> {
         JsonResponse { body, status }
     }
@@ -24,6 +26,7 @@ impl<T: Serialize> JsonResponse<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn created(body: T) -> JsonResponse<T> {
         JsonResponse {
             body,
@@ -31,6 +34,7 @@ impl<T: Serialize> JsonResponse<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn accepted(body: T) -> JsonResponse<T> {
         JsonResponse {
             body,

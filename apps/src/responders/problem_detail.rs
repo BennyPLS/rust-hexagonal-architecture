@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::io::Cursor;
 
-use rocket::{Request, response, Response};
 use rocket::http::{ContentType, Status};
 use rocket::response::Responder;
+use rocket::{response, Request, Response};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
@@ -33,11 +33,6 @@ impl From<Status> for ProblemDetail {
     }
 }
 
-impl ProblemDetail {
-    pub fn builder() -> ProblemDetailBuilder {
-        ProblemDetailBuilder::default()
-    }
-}
 
 pub struct ProblemDetailBuilder {
     r#type: Option<String>,
@@ -75,16 +70,19 @@ impl ProblemDetailBuilder {
         }
     }
 
+    #[allow(dead_code)]
     pub fn r#type<T: Into<String>>(mut self, r#type: T) -> Self {
         self.r#type = Some(r#type.into());
         self
     }
 
+    #[allow(dead_code)]
     pub fn status(mut self, status: Status) -> Self {
         self.status = status;
         self
     }
 
+    #[allow(dead_code)]
     pub fn title<T: Into<String>>(mut self, title: T) -> Self {
         self.title = title.into();
         self
@@ -95,6 +93,7 @@ impl ProblemDetailBuilder {
         self
     }
 
+    #[allow(dead_code)]
     pub fn instance<T: Into<String>>(mut self, instance: T) -> Self {
         self.instance = Some(instance.into());
         self
@@ -108,6 +107,7 @@ impl ProblemDetailBuilder {
         self
     }
 
+    #[allow(dead_code)]
     pub fn add_extension<T: Into<String>>(mut self, key: T, value: serde_json::Value) -> Self {
         self.extensions.insert(key.into(), value);
         self

@@ -1,5 +1,4 @@
 use garde::Validate;
-use std::borrow::Cow;
 use std::collections::HashMap;
 
 use rocket::data::{FromData, Limits, Outcome};
@@ -36,7 +35,7 @@ pub enum JsonValidationError {
 
 pub enum JsonGuardErrors<'a> {
     ValidationError(&'a garde::Report),
-    BodyEmpty,
+    EmptyBody,
     ParseError(&'a serde_json::Error),
     IO(&'a std::io::Error),
 }
@@ -64,8 +63,8 @@ impl<'a> JsonGuardErrors<'a> {
             JsonGuardErrors::ParseError(serde_error) => {
                 extensions.insert("parse_error".to_string(), json!(serde_error.to_string()));
             }
-            JsonGuardErrors::BodyEmpty => {
-                extensions.insert("parse_error".to_string(), json!("Body empty"));
+            JsonGuardErrors::EmptyBody => {
+                extensions.insert("parse_error".to_string(), json!("Empty Body"));
             }
             JsonGuardErrors::IO(io) => {
                 extensions.insert("io_error".to_string(), json!(io.kind().to_string()));
@@ -86,7 +85,7 @@ impl<T> Json<T> {
 }
 
 #[rocket::async_trait]
-impl<'r, T: Deserialize<'r> + Validate<Context=impl Default>> FromData<'r> for Json<T> {
+impl<'r, T: Deserialize<'r> + Validate<Context = impl Default>> FromData<'r> for Json<T> {
     type Error = JsonValidationError;
 
     async fn from_data(req: &'r Request<'_>, data: Data<'r>) -> Outcome<'r, Self> {
@@ -111,7 +110,7 @@ impl<'r, T: Deserialize<'r> + Validate<Context=impl Default>> FromData<'r> for J
         let string = local_cache!(req, string);
 
         if string.is_empty() {
-            req.local_cache(|| Some(JsonGuardErrors::BodyEmpty.get_problem_detail_extensions()));
+            req.local_cache(|| Some(JsonGuardErrors::EmptyBody.get_problem_detail_extensions()));
             return Outcome::Error((Status::BadRequest, JsonValidationError::EmptyBody));
         }
 

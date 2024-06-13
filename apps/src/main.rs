@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate rocket;
 
-use garde::Validate;
 use rocket::{Build, Rocket};
 
 use contexts::shared::infrastructure::dependency_container::{
@@ -46,11 +45,4 @@ async fn rocket() -> Rocket<Build> {
                 users::user_delete
             ],
         )
-}
-
-fn option_create<T: Validate<Context=impl Default>>(val: T) -> T
-{
-    val.validate();
-
-    val
 }

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use shaku::{Component, Interface};
 use thiserror::Error;
+use crate::users::domain::users::user_id::{UserID, UserIDErrors};
 
 use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
 
@@ -11,6 +12,11 @@ pub enum UserDeleteErrors {
     InternalServerError {
         #[source]
         source: Option<anyhow::Error>,
+    },
+    #[error("UserID validation error")]
+    UserIDError {
+        #[from]
+        source: UserIDErrors,
     },
 }
 
@@ -40,7 +46,7 @@ pub struct UserDeleteService {
 
 impl UserDelete for UserDeleteService {
     fn delete_by(&self, id: &str) -> Result<(), UserDeleteErrors> {
-        self.user_repository.delete_by(id)?;
+        self.user_repository.delete_by(&UserID::try_from(id)?)?;
 
         Ok(())
     }

@@ -18,7 +18,7 @@ pub enum UserUpdateErrors {
     #[error("User validation error")]
     UserError {
         #[from]
-        source: UserErrors
+        source: UserErrors,
     },
     #[error("User not found")]
     NotFound,
@@ -40,7 +40,12 @@ impl From<RepositoryErrors> for UserUpdateErrors {
 impl From<UserFindErrors> for UserUpdateErrors {
     fn from(value: UserFindErrors) -> Self {
         match value {
-            UserFindErrors::InternalServerError { source} => UserUpdateErrors::InternalServerError { source },
+            UserFindErrors::InternalServerError { source } => {
+                UserUpdateErrors::InternalServerError { source }
+            }
+            UserFindErrors::UserIDError { source } => UserUpdateErrors::UserError {
+                source: UserErrors::UserIDError { source },
+            },
         }
     }
 }
@@ -72,14 +77,14 @@ impl UserUpdate for UserUpdateService {
         password: Option<&str>,
         email: Option<&str>,
     ) -> Result<(), UserUpdateErrors> {
-        let user = self.user_find_service.find_by(id);
+        let user = self.user_find_service.find_by(id)?;
 
         let user = if let Some(user) = user {
             user.update(name, password, email)?
         } else {
             return Err(NotFound);
         };
-        
+
         self.user_repository.update(&user)?;
 
         Ok(())

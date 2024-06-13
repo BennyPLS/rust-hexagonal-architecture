@@ -3,8 +3,9 @@ use std::sync::Arc;
 use shaku::{Component, Interface};
 use thiserror::Error;
 
-use crate::users::domain::users::User;
+use crate::users::domain::users::user_id::{UserID, UserIDErrors};
 use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
+use crate::users::domain::users::{User};
 
 #[derive(Error, Debug)]
 pub enum UserFindErrors {
@@ -13,13 +14,20 @@ pub enum UserFindErrors {
         #[source]
         source: Option<anyhow::Error>,
     },
+    #[error("UserID validation error")]
+    UserIDError {
+        #[from]
+        source: UserIDErrors,
+    },
 }
 
 impl From<RepositoryErrors> for UserFindErrors {
     fn from(value: RepositoryErrors) -> Self {
         match value {
             RepositoryErrors::InternalServerError { source } => {
-                UserFindErrors::InternalServerError { source: Some(source) }
+                UserFindErrors::InternalServerError {
+                    source: Some(source),
+                }
             }
             _ => UserFindErrors::InternalServerError { source: None },
         }
@@ -27,7 +35,7 @@ impl From<RepositoryErrors> for UserFindErrors {
 }
 
 pub trait UserFind: Interface {
-    fn find_by(&self, id: &str) -> Option<User>;
+    fn find_by(&self, id: &str) -> Result<Option<User>, UserFindErrors>;
     fn get_all(&self) -> Vec<User>;
 }
 
@@ -39,8 +47,8 @@ pub struct UserFindService {
 }
 
 impl UserFind for UserFindService {
-    fn find_by(&self, id: &str) -> Option<User> {
-        self.user_repository.find_by(id)
+    fn find_by(&self, id: &str) -> Result<Option<User>, UserFindErrors> {
+        Ok(self.user_repository.find_by(&UserID::try_from(id)?))
     }
 
     fn get_all(&self) -> Vec<User> {

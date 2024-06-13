@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use contexts::users::application::delete::UserDelete;
-use contexts::users::application::find::UserFind;
+use contexts::users::application::find::{UserFind, UserFindErrors};
 use contexts::users::application::register::UserRegisterErrors::AlreadyExists;
 use contexts::users::application::register::{UserRegister, UserRegisterErrors};
 use contexts::users::application::update::{UserUpdate, UserUpdateErrors};
@@ -30,8 +30,7 @@ pub struct UserRequest<'a> {
     name: &'a str,
     // language=RegExp
     #[garde(length(chars, min = 8), pattern(r"\d.*[\W_]|[\W_].*\d"))]
-    #[serde(rename = "password")]
-    pub(crate) password: &'a str,
+    password: &'a str,
     #[garde(email)]
     email: &'a str,
 }
@@ -135,6 +134,27 @@ impl From<UserUpdateErrors> for ProblemDetail {
     }
 }
 
+impl From<UserFindErrors> for ProblemDetail {
+    fn from(value: UserFindErrors) -> Self {
+        match value {
+            UserFindErrors::InternalServerError { source } => {
+                let mut err = ProblemDetailBuilder::from(Status::InternalServerError);
+
+                if let Some(source) = source {
+                    err = err.detail(source.to_string());
+                }
+
+                err.build()
+            }
+            UserFindErrors::UserIDError { source } => {
+                ProblemDetailBuilder::from(Status::UnprocessableEntity)
+                    .detail(source.to_string())
+                    .build()
+            }
+        }
+    }
+}
+
 #[post("/register", data = "<new_user>")]
 pub fn user_register(
     new_user: Json<UserRequest>,
@@ -168,7 +188,7 @@ pub fn user_get(
     uuid: String,
     user_service: Inject<'_, dyn UserFind>,
 ) -> Result<JsonResponse<UserResponse>, ProblemDetail> {
-    match user_service.find_by(&uuid) {
+    match user_service.find_by(&uuid)? {
         Some(user) => Ok(JsonResponse::ok(UserResponse::from(user))),
         None => Err(ProblemDetail::from(Status::NotFound)),
     }
@@ -181,12 +201,7 @@ pub fn user_update(
 ) -> Result<Status, ProblemDetail> {
     let user = updated_user.into_inner();
 
-    update_service.update(
-        &user.uuid.to_string(),
-        user.name,
-        user.password,
-        user.email,
-    )?;
+    update_service.update(&user.uuid.to_string(), user.name, user.password, user.email)?;
 
     Ok(Status::NoContent)
 }

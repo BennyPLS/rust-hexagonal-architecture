@@ -3,12 +3,12 @@ use std::sync::Arc;
 use shaku::Component;
 use sqlite::{Error, State, Statement};
 
-use crate::users::domain::users::User;
 use crate::users::domain::users::user_email::UserEmail;
 use crate::users::domain::users::user_id::UserID;
 use crate::users::domain::users::user_name::UserName;
 use crate::users::domain::users::user_password::UserPassword;
 use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
+use crate::users::domain::users::User;
 use crate::users::infrastructure::sqlite::Database;
 
 impl From<Error> for RepositoryErrors {
@@ -95,12 +95,12 @@ impl UserRepository for UserRepositorySQLite {
         Ok(())
     }
 
-    fn find_by(&self, id: &str) -> Option<User> {
+    fn find_by(&self, id: &UserID) -> Option<User> {
         let conn = self.database.get_connection();
 
         let mut stmt = conn.prepare(STMT_FIND_BY_ID).ok()?;
 
-        stmt.bind((1, id)).ok()?;
+        stmt.bind((1, id.to_string().as_str())).ok()?;
 
         if let Ok(State::Row) = stmt.next() {
             Some(get_user(&stmt))
@@ -128,14 +128,14 @@ impl UserRepository for UserRepositorySQLite {
         users
     }
 
-    fn delete_by(&self, id: &str) -> Result<(), RepositoryErrors> {
+    fn delete_by(&self, id: &UserID) -> Result<(), RepositoryErrors> {
         let conn = self.database.get_connection();
 
         let mut stmt = conn.prepare(STMT_DELETE)?;
 
         dbg!(id);
 
-        stmt.bind((1, id))?;
+        stmt.bind((1, id.to_string().as_str()))?;
 
         stmt.next()?;
 
@@ -148,7 +148,7 @@ impl UserRepository for UserRepositorySQLite {
         let mut stmt = conn.prepare(STMT_UPDATE)?;
 
         dbg!(&user);
-        
+
         stmt.bind((1, user.get_name()))?;
         stmt.bind((2, user.get_password()))?;
         stmt.bind((3, user.get_email()))?;
