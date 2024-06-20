@@ -16,5 +16,5 @@ pub enum CriteriaRepositoryErrors {
 pub type Result<T> = result::Result<T, CriteriaRepositoryErrors>;
 
 pub trait UserCriteriaRepository: Interface {
-    fn find_by(&self, criteria: Criteria) -> Result<Vec<User>>;
+    fn find_by(&self, criteria: &Criteria) -> Result<Vec<User>>;
 }

@@ -41,7 +41,7 @@ const LIMIT: &str = " LIMIT ?";
 const OFFSET: &str = " OFFSET ?";
 
 impl UserCriteriaRepository for UserCriteriaRepositorySQLite {
-    fn find_by(&self, criteria: Criteria) -> Result<Vec<User>> {
+    fn find_by(&self, criteria: &Criteria) -> Result<Vec<User>> {
         let mut criteria_query = STMT_INSERT.to_owned();
         let mut parameters: Vec<(usize, &str)> = Vec::new();
 
