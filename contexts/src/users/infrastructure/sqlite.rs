@@ -1,5 +1,4 @@
 use shaku::{Component, Interface};
-use sqlite::ConnectionThreadSafe;
 
 pub mod container;
 mod user_repository_sqlite;
