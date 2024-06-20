@@ -1,11 +1,9 @@
 use shaku::{Component, Interface};
 use sqlite::ConnectionThreadSafe;
 
-pub mod user_repository_sqlite;
-
-pub trait Database: Interface {
-    fn get_connection(&self) -> ConnectionThreadSafe;
-}
+pub mod container;
+mod user_repository_sqlite;
+mod mappers;
 
 const DATABASE_FILE: &str = "database.sqlite";
 
@@ -27,15 +25,5 @@ pub fn init() {
         if err.code.unwrap() != 1 {
             panic!("Database couldn't be initialized.")
         }
-    }
-}
-
-#[derive(Component)]
-#[shaku(interface = Database)]
-pub struct SQLiteDatabase {}
-
-impl Database for SQLiteDatabase {
-    fn get_connection(&self) -> ConnectionThreadSafe {
-        sqlite::Connection::open_thread_safe(DATABASE_FILE).unwrap()
     }
 }

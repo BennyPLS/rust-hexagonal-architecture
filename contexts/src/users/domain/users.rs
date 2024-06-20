@@ -10,6 +10,7 @@ pub mod user_id;
 pub mod user_name;
 pub mod user_password;
 pub mod user_repository;
+pub mod user_criteria_repository;
 
 /// Errors that can occur during user validation.
 #[derive(Error, Debug)]

@@ -1,73 +1,37 @@
-use std::sync::Arc;
-
 use shaku::Component;
-use sqlite::{Error, State, Statement};
+use sqlite::Error as SQLiteError;
+use sqlite::State;
 
-use crate::users::domain::users::user_email::UserEmail;
 use crate::users::domain::users::user_id::UserID;
-use crate::users::domain::users::user_name::UserName;
-use crate::users::domain::users::user_password::UserPassword;
 use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
 use crate::users::domain::users::User;
-use crate::users::infrastructure::sqlite::Database;
+use crate::users::infrastructure::sqlite::mappers::get_user;
+use crate::users::infrastructure::sqlite::DATABASE_FILE;
 
-impl From<Error> for RepositoryErrors {
-    fn from(value: Error) -> Self {
+impl From<SQLiteError> for RepositoryErrors {
+    fn from(value: SQLiteError) -> Self {
         if let Some(code) = value.code {
-            return match code {
+            match code {
                 19 => RepositoryErrors::AlreadyExists,
                 _ => unmapped_error(value),
-            };
+            }
+        } else {
+            unmapped_error(value)
         }
-
-        unmapped_error(value)
     }
 }
 
-fn unmapped_error(error: Error) -> RepositoryErrors {
+fn unmapped_error(error: SQLiteError) -> RepositoryErrors {
     dbg!(&error);
     RepositoryErrors::InternalServerError {
         source: anyhow::Error::from(error),
     }
 }
 
-fn get_user(statement: &Statement) -> User {
-    User::new(
-        UserID::try_from(
-            statement
-                .read::<String, _>(0)
-                .expect("Expected String User ID")
-                .as_str(),
-        )
-        .expect("Invalid Database UserID"),
-        UserName::try_from(
-            statement
-                .read::<String, _>(1)
-                .expect("Expected String User Name"),
-        )
-        .expect("Invalid Database UserName"),
-        UserPassword::try_from(
-            statement
-                .read::<String, _>(2)
-                .expect("Expected String User Password")
-                .as_str(),
-        )
-        .expect("Invalid Database UserPassword"),
-        UserEmail::try_from(
-            statement
-                .read::<String, _>(3)
-                .expect("Expected String User Email"),
-        )
-        .expect("Invalid Database UserEmail"),
-    )
-}
-
 #[derive(Component)]
 #[shaku(interface = UserRepository)]
-pub struct UserRepositorySQLite {
-    #[shaku(inject)]
-    database: Arc<dyn Database>,
-}
+pub struct UserRepositorySQLite {}
+
 // language=SQL
 const STMT_INSERT: &str = "INSERT INTO users (id, name, password, email) VALUES (?, ?, ?, ?)";
 // language=SQL
@@ -81,7 +45,7 @@ const STMT_DELETE: &str = "DELETE FROM users WHERE id = ?";
 
 impl UserRepository for UserRepositorySQLite {
     fn save(&self, user: &User) -> Result<(), RepositoryErrors> {
-        let conn = self.database.get_connection();
+        let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_INSERT)?;
 
@@ -96,21 +60,22 @@ impl UserRepository for UserRepositorySQLite {
     }
 
     fn find_by(&self, id: &UserID) -> Option<User> {
-        let conn = self.database.get_connection();
+        let conn = sqlite::Connection::open(DATABASE_FILE).ok()?;
 
         let mut stmt = conn.prepare(STMT_FIND_BY_ID).ok()?;
 
         stmt.bind((1, id.to_string().as_str())).ok()?;
 
-        if let Ok(State::Row) = stmt.next() {
-            Some(get_user(&stmt))
-        } else {
-            None
-        }
+        stmt.next().ok()?;
+
+        Some(get_user(&stmt))
     }
 
     fn get_all(&self) -> Vec<User> {
-        let conn = self.database.get_connection();
+        let conn = match sqlite::Connection::open(DATABASE_FILE) {
+            Ok(conn) => conn,
+            Err(_) => return vec![],
+        };
 
         let stmt = conn.prepare(STMT_GET_ALL);
 
@@ -129,7 +94,7 @@ impl UserRepository for UserRepositorySQLite {
     }
 
     fn delete_by(&self, id: &UserID) -> Result<(), RepositoryErrors> {
-        let conn = self.database.get_connection();
+        let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_DELETE)?;
 
@@ -143,7 +108,7 @@ impl UserRepository for UserRepositorySQLite {
     }
 
     fn update(&self, user: &User) -> Result<(), RepositoryErrors> {
-        let conn = self.database.get_connection();
+        let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_UPDATE)?;
 
