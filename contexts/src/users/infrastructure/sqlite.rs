@@ -3,6 +3,7 @@ use shaku::{Component, Interface};
 pub mod container;
 mod user_repository_sqlite;
 mod mappers;
+mod user_criteria_repository_sqlite;
 
 const DATABASE_FILE: &str = "database.sqlite";
 
