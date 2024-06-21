@@ -51,9 +51,9 @@ impl UserCriteriaRepository for UserCriteriaRepositorySQLite {
         }
 
         if let Some(order) = &criteria.order {
-            match order.order_type {
+            match order.ty {
                 OrderType::ASC => criteria_query += ORDER_BY_ASC,
-                OrderType::DES => criteria_query += ORDER_BY_DESC,
+                OrderType::DESC => criteria_query += ORDER_BY_DESC,
             }
             parameters.push((parameters.len() + 1, &order.field))
         }

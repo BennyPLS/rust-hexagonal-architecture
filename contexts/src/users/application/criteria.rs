@@ -44,6 +44,6 @@ pub struct UserCriteriaService {
 
 impl UserCriteria for UserCriteriaService {
     fn find_by(&self, criteria: &Criteria) -> Result<Vec<User>> {
-        todo!()
+        Ok(self.user_repository.find_by(criteria)?)
     }
 }
