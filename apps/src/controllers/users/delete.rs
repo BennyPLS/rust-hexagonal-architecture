@@ -1,7 +1,6 @@
 use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
 use crate::Inject;
 use contexts::users::application::delete::{UserDelete, UserDeleteErrors};
-use contexts::users::application::update::UserUpdateErrors;
 use rocket::http::Status;
 
 impl From<UserDeleteErrors> for ProblemDetail {

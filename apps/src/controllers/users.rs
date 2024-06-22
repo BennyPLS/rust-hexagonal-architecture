@@ -8,15 +8,13 @@ pub use delete::user_delete;
 pub use find::{user_get, user_get_all};
 pub use register::user_register;
 pub use update::user_update;
+pub use criteria::user_criteria;
 
-use contexts::users::application::delete::UserDelete;
-use contexts::users::application::find::UserFind;
-use contexts::users::application::register::UserRegister;
-use contexts::users::application::update::UserUpdate;
-use contexts::users::domain::users::{User, UserErrors};
+
 use garde::Validate;
 use rocket::http::Status;
 use serde::{Deserialize, Serialize};
+use contexts::users::domain::users::{User, UserErrors};
 
 use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
 
@@ -40,7 +38,7 @@ pub struct UserRequest<'a> {
 }
 
 #[derive(Debug, Serialize)]
-struct UserResponse {
+pub struct UserResponse {
     uuid: String,
     name: String,
     #[serde(rename = "password")]

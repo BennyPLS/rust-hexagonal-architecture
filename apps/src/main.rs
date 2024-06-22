@@ -38,7 +38,8 @@ async fn rocket() -> Rocket<Build> {
                 users::user_get,
                 users::user_get_all,
                 users::user_update,
-                users::user_delete
+                users::user_delete,
+                users::user_criteria
             ],
         )
 }

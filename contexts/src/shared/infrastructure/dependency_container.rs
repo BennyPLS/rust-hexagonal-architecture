@@ -1,3 +1,4 @@
+use crate::users::application::criteria::UserCriteriaService;
 use shaku::HasComponent;
 use std::sync::Arc;
 
@@ -20,6 +21,7 @@ shaku::module! {
             UserFindService,
             UserUpdateService,
             UserDeleteService,
+            UserCriteriaService
         ],
         providers = [],
 

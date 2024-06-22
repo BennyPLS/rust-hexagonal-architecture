@@ -13,7 +13,7 @@ pub struct Criteria<'a> {
 }
 
 impl<'a> Criteria<'a> {
-    fn new(
+    pub fn new(
         filters: Vec<Filter<'a>>,
         order: Option<Order<'a>>,
         limit: Option<u32>,

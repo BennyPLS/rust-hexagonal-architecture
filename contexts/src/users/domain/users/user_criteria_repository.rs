@@ -11,6 +11,8 @@ pub enum CriteriaRepositoryErrors {
         #[source]
         source: anyhow::Error,
     },
+    #[error("The field {0} don't exist for user")]
+    FieldNotFound(String),
 }
 
 pub type Result<T> = result::Result<T, CriteriaRepositoryErrors>;

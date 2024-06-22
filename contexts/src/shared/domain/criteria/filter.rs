@@ -9,7 +9,7 @@ pub struct Filter<'a> {
 }
 
 impl<'a> Filter<'a> {
-    fn new(field: &'a str, operator: Operator, value: &'a str) -> Filter<'a> {
+    pub fn new(field: &'a str, operator: Operator, value: &'a str) -> Filter<'a> {
         Filter {
             field,
             operator,

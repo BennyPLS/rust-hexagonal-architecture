@@ -1,6 +1,5 @@
 use crate::shared::domain::criteria::filter::Operator;
 use crate::shared::domain::criteria::order::OrderType;
-use shaku::{Component, Interface};
 
 pub mod container;
 mod mappers;
@@ -17,6 +16,8 @@ CREATE TABLE users (
     password TEXT NOT NULL,
     email TEXT NOT NULL
 )"#;
+
+pub const USER_TABLE_FIELDS: [&'static str; 4] = ["id", "name", "password", "email"];
 
 pub fn init() {
     let result = sqlite::Connection::open_thread_safe(DATABASE_FILE)

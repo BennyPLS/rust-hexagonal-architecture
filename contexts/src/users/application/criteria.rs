@@ -14,6 +14,8 @@ pub enum UserCriteriaErrors {
         #[source]
         source: Option<anyhow::Error>,
     },
+    #[error("The field {0} don't exist for user")]
+    FieldNotFound(String),
 }
 
 impl From<CriteriaRepositoryErrors> for UserCriteriaErrors {
@@ -24,7 +26,9 @@ impl From<CriteriaRepositoryErrors> for UserCriteriaErrors {
                     source: Some(source),
                 }
             }
-            _ => UserCriteriaErrors::InternalServerError { source: None },
+            CriteriaRepositoryErrors::FieldNotFound(field) => {
+                UserCriteriaErrors::FieldNotFound(field)
+            }
         }
     }
 }

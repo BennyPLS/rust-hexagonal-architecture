@@ -3,14 +3,20 @@ POST http://localhost:8000/users/register
 Content-Type: application/json
 
 {
-  "uuid": "502a4267-ddcd-4ab3-ac03-68587d2c3d65",
-  "name": "John Doe Especial",
+  "uuid": "502a4237-ddcd-7ab3-ac03-68587d2c3d65",
+  "name": "John Doe Horrible",
   "password": "password_123",
   "email": "john.doe@example.com"
 }
 
 ### Gets all the users
 GET http://localhost:8000/users
+
+### Gets all the users matching Criteria
+GET http://localhost:8000/users?limit=1&offset=0
+    &filters[1].field=name
+    &filters[1].operator=eq
+    &filters[1].value=John Doe Horrible
 
 ### Get only one user by id
 GET http://localhost:8000/users/502a4267-ddcd-4ab3-ac03-68587d2c3d65

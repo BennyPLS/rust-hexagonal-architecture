@@ -8,7 +8,7 @@ pub struct Order<'a> {
 }
 
 impl<'a> Order<'a> {
-    fn new(field: &'a str, ty: OrderType) -> Order<'a> {
+    pub fn new(field: &'a str, ty: OrderType) -> Order<'a> {
         Order { field, ty }
     }
 }

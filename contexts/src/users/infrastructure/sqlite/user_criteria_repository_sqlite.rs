@@ -1,12 +1,13 @@
-use crate::shared::domain::criteria::filter::{Filter};
-use crate::shared::domain::criteria::order::{Order};
+use crate::shared::domain::criteria::filter::Filter;
+use crate::shared::domain::criteria::order::Order;
 use crate::shared::domain::criteria::Criteria;
+use crate::users::domain::users::user_criteria_repository::CriteriaRepositoryErrors::FieldNotFound;
 use crate::users::domain::users::user_criteria_repository::{
     CriteriaRepositoryErrors, Result, UserCriteriaRepository,
 };
 use crate::users::domain::users::User;
 use crate::users::infrastructure::sqlite::mappers::get_user;
-use crate::users::infrastructure::sqlite::{ToSQLite, DATABASE_FILE, OP_LIKE};
+use crate::users::infrastructure::sqlite::{ToSQLite, DATABASE_FILE, OP_LIKE, USER_TABLE_FIELDS};
 use shaku::Component;
 use sqlite::{Error as SQLiteError, State};
 
@@ -35,6 +36,7 @@ const ORDER_BY: &str = " ORDER BY ? ";
 const LIMIT: &str = " LIMIT ?";
 const OFFSET: &str = " OFFSET ?";
 
+#[derive(Debug)]
 struct CriteriaQuery {
     pub query: String,
     pub parameters: Vec<String>,
@@ -48,16 +50,20 @@ impl CriteriaQuery {
         }
     }
 
-    fn add_filter(&mut self, filter: &Filter) {
-        self.query += &format!(" WHERE ? {} ?", &filter.operator.to_sql());
+    fn add_filter(&mut self, filter: &Filter) -> Result<()> {
+        if !USER_TABLE_FIELDS.contains(&filter.field) {
+            return Err(FieldNotFound(filter.field.to_owned()));
+        };
 
-        self.parameters.push(filter.field.to_string());
+        self.query += &format!(" WHERE {} {} ?", filter.field, &filter.operator.to_sql());
 
         if OP_LIKE.contains(&filter.operator) {
             self.parameters.push(format!("%{}%", filter.value));
         } else {
             self.parameters.push(filter.value.to_owned());
         }
+
+        Ok(())
     }
 
     fn add_order(&mut self, order: &Order) {
@@ -87,7 +93,7 @@ impl UserCriteriaRepository for UserCriteriaRepositorySQLite {
         let mut query = CriteriaQuery::new();
 
         for filter in &criteria.filters {
-            query.add_filter(filter);
+            query.add_filter(filter)?;
         }
 
         if let Some(order) = &criteria.order {
@@ -107,7 +113,7 @@ impl UserCriteriaRepository for UserCriteriaRepositorySQLite {
         let mut stmt = conn.prepare(query.query)?;
 
         for (index, value) in query.parameters.iter().enumerate() {
-            stmt.bind((index, value.as_str()))?;
+            stmt.bind((index + 1, value.as_str()))?;
         }
 
         let mut users = vec![];
