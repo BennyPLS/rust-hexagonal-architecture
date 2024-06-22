@@ -1,6 +1,7 @@
 use crate::shared::domain::criteria::order::OrderType::{ASC, DESC};
 use thiserror::Error;
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct Order<'a> {
     pub field: &'a str,
     pub ty: OrderType,
@@ -16,6 +17,7 @@ impl<'a> Order<'a> {
 #[error("Order type not valid")]
 pub struct OrderTypeNotFound;
 
+#[derive(Debug, Eq, PartialEq)]
 pub enum OrderType {
     ASC,
     DESC,

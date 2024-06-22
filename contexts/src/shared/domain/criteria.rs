@@ -4,6 +4,7 @@ use crate::shared::domain::criteria::order::Order;
 pub mod filter;
 pub mod order;
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct Criteria<'a> {
     pub filters: Vec<Filter<'a>>,
     pub order: Option<Order<'a>>,

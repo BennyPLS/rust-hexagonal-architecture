@@ -1,6 +1,7 @@
 use crate::shared::domain::criteria::filter::Operator::{CO, EQ, GE, GT, LE, LT, NC};
 use thiserror::Error;
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct Filter<'a> {
     pub field: &'a str,
     pub operator: Operator,
@@ -21,6 +22,7 @@ impl<'a> Filter<'a> {
 #[error("Operator not valid")]
 pub struct OperatorNotFound;
 
+#[derive(Debug, Eq, PartialEq)]
 pub enum Operator {
     EQ,
     GT,
