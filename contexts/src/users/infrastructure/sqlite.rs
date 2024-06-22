@@ -1,9 +1,11 @@
+use crate::shared::domain::criteria::filter::Operator;
+use crate::shared::domain::criteria::order::OrderType;
 use shaku::{Component, Interface};
 
 pub mod container;
-mod user_repository_sqlite;
 mod mappers;
 mod user_criteria_repository_sqlite;
+mod user_repository_sqlite;
 
 const DATABASE_FILE: &str = "database.sqlite";
 
@@ -24,6 +26,35 @@ pub fn init() {
     if let Err(err) = result {
         if err.code.unwrap() != 1 {
             panic!("Database couldn't be initialized.")
+        }
+    }
+}
+
+pub trait ToSQLite {
+    fn to_sql(&self) -> &'static str;
+}
+
+pub const OP_LIKE: [Operator; 2] = [Operator::CO, Operator::NC];
+
+impl ToSQLite for Operator {
+    fn to_sql(&self) -> &'static str {
+        match &self {
+            Operator::EQ => "=",
+            Operator::GT => ">",
+            Operator::GE => ">=",
+            Operator::LT => "<",
+            Operator::LE => "<=",
+            Operator::CO => "LIKE",
+            Operator::NC => "NOT LIKE",
+        }
+    }
+}
+
+impl ToSQLite for OrderType {
+    fn to_sql(&self) -> &'static str {
+        match &self {
+            OrderType::ASC => "ASC",
+            OrderType::DESC => "DESC",
         }
     }
 }
