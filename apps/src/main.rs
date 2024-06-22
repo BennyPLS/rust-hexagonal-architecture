@@ -7,7 +7,7 @@ use contexts::shared::infrastructure::dependency_container::{build_container, Ap
 
 use crate::controllers::users;
 
-use contexts::users::infrastructure::sqlite;
+use contexts::users::infrastructure::sqlite::container;
 
 pub type Inject<'r, I> = shaku_rocket::Inject<'r, AppContainer, I>;
 
@@ -19,9 +19,7 @@ mod responders;
 #[launch]
 async fn rocket() -> Rocket<Build> {
     rocket::build()
-        .manage(Box::new(build_container(
-            sqlite::container::build_container(),
-        )))
+        .manage(Box::new(build_container(container::build_container())))
         .register(
             "/",
             catchers![

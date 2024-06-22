@@ -5,7 +5,7 @@ use crate::users::infrastructure::sqlite::user_repository_sqlite::UserRepository
 use shaku::{module, Component};
 
 module! {
-    SQLiteDatabaseModule: DatabaseModule {
+    pub SQLiteDatabaseModule: DatabaseModule {
         components = [
             UserRepositorySQLite,
             UserCriteriaRepositorySQLite
