@@ -1,6 +1,6 @@
-use std::borrow::Borrow;
+use garde::rules::AsStr;
+use std::borrow::{Borrow, Cow};
 use std::fmt::Display;
-use std::ops::Deref;
 
 use thiserror::Error;
 use uuid::{NoContext, Timestamp, Uuid};
@@ -21,54 +21,10 @@ pub enum UserIDErrors {
 }
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct OwnedUserID(pub(crate) String);
+pub struct UserID<'a>(pub(crate) Cow<'a, str>);
 
-impl TryFrom<String> for OwnedUserID {
-    type Error = UserIDErrors;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        let err = Uuid::parse_str(value.as_str());
-
-        let uuid = match err {
-            Ok(uuid) => uuid,
-            Err(err) => {
-                return Err(InvalidUuid {
-                    source: anyhow::Error::from(err),
-                })
-            }
-        };
-
-        let uuid_version = uuid.get_version_num();
-        if uuid_version != UUID_TIMESTAMP_RAND_VERSION {
-            return Err(InvalidUuidVersion(uuid_version));
-        }
-
-        Ok(OwnedUserID(value))
-    }
-}
-
-impl OwnedUserID {
-    pub fn new() -> Self {
-        let uuid = Uuid::new_v7(Timestamp::now(NoContext)).to_string();
-        OwnedUserID(uuid)
-    }
-
-    pub fn get(&self) -> &str {
-        &self.0
-    }
-
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct UserID<'a>(pub(crate) &'a str);
-
-impl<'a> TryFrom<&'a str> for UserID<'a> {
-    type Error = UserIDErrors;
-
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+impl UserID<'_> {
+    fn validate(value: &str) -> Result<(), UserIDErrors> {
         let err = Uuid::parse_str(value);
 
         let uuid = match err {
@@ -85,13 +41,27 @@ impl<'a> TryFrom<&'a str> for UserID<'a> {
             return Err(InvalidUuidVersion(uuid_version));
         }
 
-        Ok(UserID(value))
+        Ok(())
     }
 }
 
-impl<'a> From<&'a OwnedUserID> for UserID<'a> {
-    fn from(owned: &'a OwnedUserID) -> Self {
-        UserID(&owned.0)
+impl<'a> TryFrom<&'a str> for UserID<'a> {
+    type Error = UserIDErrors;
+
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        Self::validate(value)?;
+
+        Ok(UserID(Cow::Borrowed(&value)))
+    }
+}
+
+impl TryFrom<String> for UserID<'_> {
+    type Error = UserIDErrors;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::validate(value.as_str())?;
+        
+        Ok(UserID(Cow::Owned(value)))
     }
 }
 
@@ -101,12 +71,16 @@ impl<'a> Display for UserID<'a> {
     }
 }
 
+impl UserID<'_> {
+    pub fn new() -> Self {
+        let now = Timestamp::now(NoContext);
+        let uuid = Uuid::new_v7(now).to_string();
+        UserID(Cow::Owned(uuid))
+    }
+}
+
 impl<'a> UserID<'a> {
     pub fn get(&self) -> &'a str {
-        self.0
-    }
-
-    pub fn to_owned(&self) -> OwnedUserID {
-        OwnedUserID(self.0.to_owned())
+        self.0.as_ref()
     }
 }
