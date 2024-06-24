@@ -4,17 +4,16 @@ mod find;
 mod register;
 mod update;
 
+pub use criteria::user_criteria;
 pub use delete::user_delete;
 pub use find::{user_get, user_get_all};
 pub use register::user_register;
 pub use update::user_update;
-pub use criteria::user_criteria;
 
-
+use contexts::users::domain::users::{User, UserErrors};
 use garde::Validate;
 use rocket::http::Status;
 use serde::{Deserialize, Serialize};
-use contexts::users::domain::users::{User, UserErrors};
 
 use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
 
@@ -46,13 +45,14 @@ pub struct UserResponse {
     email: String,
 }
 
-impl From<User> for UserResponse {
+impl From<User<'_>> for UserResponse {
     fn from(value: User) -> Self {
+        let (uuid, name, password, email) = value.into_inners();
         UserResponse {
-            uuid: value.get_id(),
-            name: value.get_name().to_owned(),
-            password: value.get_password().to_owned(),
-            email: value.get_email().to_owned(),
+            uuid,
+            name,
+            password,
+            email,
         }
     }
 }

@@ -49,7 +49,7 @@ impl UserRepository for UserRepositorySQLite {
 
         let mut stmt = conn.prepare(STMT_INSERT)?;
 
-        stmt.bind((1, user.get_id().as_str()))?;
+        stmt.bind((1, user.get_id()))?;
         stmt.bind((2, user.get_name()))?;
         stmt.bind((3, user.get_password()))?;
         stmt.bind((4, user.get_email()))?;
@@ -113,7 +113,7 @@ impl UserRepository for UserRepositorySQLite {
         stmt.bind((1, user.get_name()))?;
         stmt.bind((2, user.get_password()))?;
         stmt.bind((3, user.get_email()))?;
-        stmt.bind((4, user.get_id().as_str()))?;
+        stmt.bind((4, user.get_id()))?;
 
         stmt.next()?;
 
