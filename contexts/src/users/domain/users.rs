@@ -135,6 +135,6 @@ impl<'a> User<'a> {
     }
     
     pub fn into_inners(self) -> (String, String, String, String) {
-        (self.id.into_inner(), self.name.into_inner(), self.password.into_inner(), self.email.into_inner())
+        (self.id.into_owned(), self.name.into_owned(), self.password.into_owned(), self.email.into_owned())
     }
 }

@@ -92,7 +92,7 @@ impl<'a> UserPassword<'a> {
         self.0.as_ref()
     }
 
-    pub fn into_inner(self) -> String {
+    pub fn into_owned(self) -> String {
         self.0.into_owned()
     }
 }
