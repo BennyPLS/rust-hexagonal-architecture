@@ -1,10 +1,8 @@
-use thiserror::Error;
 use crate::shared::domain::regex::valid_email;
+use std::borrow::Cow;
+use thiserror::Error;
 
 use crate::users::domain::users::user_email::UserEmailErrors::InvalidEmail;
-
-#[derive(Debug)]
-pub struct UserEmail(pub(crate) String);
 
 #[derive(Error, Debug)]
 pub enum UserEmailErrors {
@@ -12,28 +10,45 @@ pub enum UserEmailErrors {
     InvalidEmail,
 }
 
-impl TryFrom<&str> for UserEmail {
-    type Error = UserEmailErrors;
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct UserEmail<'a>(Cow<'a, str>);
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+impl UserEmail<'_> {
+    fn validate(value: &str) -> Result<(), UserEmailErrors> {
         if !valid_email(&value) {
             return Err(InvalidEmail);
         }
 
-        Ok(UserEmail(value.to_owned()))
+        Ok(())
     }
 }
 
-impl TryFrom<String> for UserEmail {
+impl<'a> TryFrom<&'a str> for UserEmail<'a> {
+    type Error = UserEmailErrors;
+
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        Self::validate(value)?;
+
+        Ok(UserEmail(value.into()))
+    }
+}
+
+impl TryFrom<String> for UserEmail<'_> {
     type Error = UserEmailErrors;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        UserEmail::try_from(value.as_str())
+        Self::validate(value.as_str())?;
+
+        Ok(UserEmail(value.into()))
     }
 }
 
-impl UserEmail {
-    pub fn new(value: String) -> Result<UserEmail, UserEmailErrors> {
-        UserEmail::try_from(value)
+impl<'a> UserEmail<'a> {
+    pub fn get(&self) -> &str {
+        self.0.as_ref()
+    }
+
+    pub fn into_owned(self) -> String {
+        self.0.into_owned()
     }
 }

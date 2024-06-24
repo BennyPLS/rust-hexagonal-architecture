@@ -8,7 +8,7 @@ use crate::users::infrastructure::sqlite::{
     criteria_sqlite, DATABASE_FILE, USER_TABLE_FIELDS, USER_TABLE_NAME,
 };
 use shaku::Component;
-use sqlite::{Error as SQLiteError, State};
+use sqlite::{Error as SQLiteError};
 
 impl From<SQLiteError> for CriteriaRepositoryErrors {
     fn from(value: SQLiteError) -> Self {

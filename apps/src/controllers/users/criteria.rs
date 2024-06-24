@@ -7,7 +7,6 @@ use contexts::shared::domain::criteria::order::{Order, OrderType, OrderTypeNotFo
 use contexts::shared::domain::criteria::Criteria;
 use contexts::users::application::criteria::{UserCriteria, UserCriteriaErrors};
 use rocket::http::Status;
-use serde_json::json;
 use std::num::ParseIntError;
 use thiserror::Error;
 

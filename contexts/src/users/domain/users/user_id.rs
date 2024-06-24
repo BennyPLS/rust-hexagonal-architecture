@@ -1,12 +1,10 @@
+use std::borrow::{Cow};
 use std::fmt::Display;
 
 use thiserror::Error;
 use uuid::{NoContext, Timestamp, Uuid};
 
 use crate::users::domain::users::user_id::UserIDErrors::{InvalidUuid, InvalidUuidVersion};
-
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct UserID(Uuid);
 
 const UUID_TIMESTAMP_RAND_VERSION: usize = 7;
 
@@ -21,18 +19,11 @@ pub enum UserIDErrors {
     InvalidUuidVersion(usize),
 }
 
-impl TryFrom<String> for UserID {
-    type Error = UserIDErrors;
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct UserID<'a>(Cow<'a, str>);
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        UserID::try_from(value.as_str())
-    }
-}
-
-impl TryFrom<&str> for UserID {
-    type Error = UserIDErrors;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+impl UserID<'_> {
+    fn validate(value: &str) -> Result<(), UserIDErrors> {
         let err = Uuid::parse_str(value);
 
         let uuid = match err {
@@ -44,38 +35,55 @@ impl TryFrom<&str> for UserID {
             }
         };
 
-        Ok(UserID::try_from(uuid)?)
-    }
-}
-
-impl TryFrom<Uuid> for UserID {
-    type Error = UserIDErrors;
-
-    fn try_from(value: Uuid) -> Result<Self, Self::Error> {
-        let uuid_version = value.get_version_num();
-
+        let uuid_version = uuid.get_version_num();
         if uuid_version != UUID_TIMESTAMP_RAND_VERSION {
             return Err(InvalidUuidVersion(uuid_version));
         }
 
-        Ok(UserID(value))
+        Ok(())
     }
 }
 
-impl Display for UserID {
+impl<'a> TryFrom<&'a str> for UserID<'a> {
+    type Error = UserIDErrors;
+
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        Self::validate(value)?;
+
+        Ok(UserID(Cow::Borrowed(&value)))
+    }
+}
+
+impl TryFrom<String> for UserID<'_> {
+    type Error = UserIDErrors;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::validate(value.as_str())?;
+        
+        Ok(UserID(Cow::Owned(value)))
+    }
+}
+
+impl<'a> Display for UserID<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.to_string())
+        write!(f, "{}", self.0)
     }
 }
 
-impl UserID {
-    pub fn new() -> UserID {
-        let timestamp = Timestamp::now(NoContext);
-        let uuid = Uuid::new_v7(timestamp);
-        UserID(uuid)
+impl UserID<'_> {
+    pub fn new() -> Self {
+        let now = Timestamp::now(NoContext);
+        let uuid = Uuid::new_v7(now).to_string();
+        UserID(Cow::Owned(uuid))
+    }
+}
+
+impl<'a> UserID<'a> {
+    pub fn get(&self) -> &str {
+        self.0.as_ref()
     }
 
-    pub fn into_inner(self) -> Uuid {
-        self.0
+    pub fn into_owned(self) -> String {
+        self.0.into_owned()
     }
 }

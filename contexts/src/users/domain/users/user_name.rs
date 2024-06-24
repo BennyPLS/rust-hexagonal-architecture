@@ -1,10 +1,11 @@
+use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
 
 use crate::users::domain::users::user_name::UserNameErrors::NotLongEnough;
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct UserName(pub(crate) String);
+pub struct UserName<'a>(Cow<'a, str>);
 
 pub const MIN_NAME_LENGTH: usize = 5;
 
@@ -14,39 +15,50 @@ pub enum UserNameErrors {
     NotLongEnough(usize),
 }
 
-impl TryFrom<&str> for UserName {
+impl<'a> TryFrom<&'a str> for UserName<'a> {
     type Error = UserNameErrors;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let length = value.chars().count();
         if length < MIN_NAME_LENGTH {
             return Err(NotLongEnough(length));
         }
 
-        Ok(UserName(String::from(value)))
+        Ok(UserName(value.into()))
     }
 }
 
-impl TryFrom<String> for UserName {
+impl TryFrom<String> for UserName<'_> {
     type Error = UserNameErrors;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        UserName::try_from(value.as_str())
+        let length = value.chars().count();
+        if length < MIN_NAME_LENGTH {
+            return Err(NotLongEnough(length));
+        }
+
+        Ok(UserName(value.into()))
     }
 }
 
-impl Display for UserName {
+impl Display for UserName<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-       write!(f, "{}", self.0) 
+        write!(f, "{}", self.0)
     }
 }
 
-impl UserName {
-    pub fn new(value: String) -> Result<UserName, UserNameErrors> {
-        UserName::try_from(value.as_str())
+impl UserName<'_> {
+    pub fn new(value: String) -> Result<Self, UserNameErrors> {
+        UserName::try_from(value)
+    }
+}
+
+impl<'a> UserName<'a> {
+    pub fn get(&self) -> &str {
+        self.0.as_ref()
     }
 
-    pub fn into_inner(self) -> String {
-        self.0
+    pub fn into_owned(self) -> String {
+        self.0.into_owned()
     }
 }
