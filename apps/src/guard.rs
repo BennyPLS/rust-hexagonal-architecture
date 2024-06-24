@@ -47,7 +47,6 @@ impl<'a> JsonGuardErrors<'a> {
         match self {
             JsonGuardErrors::ValidationError(errors) => {
                 let mut list = vec![];
-                dbg!(errors);
 
                 for (field, error) in errors.iter() {
                     let mut err = HashMap::new();
