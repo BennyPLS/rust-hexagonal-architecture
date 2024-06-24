@@ -1,12 +1,11 @@
+use std::borrow::Borrow;
 use std::fmt::Display;
+use std::ops::Deref;
 
 use thiserror::Error;
 use uuid::{NoContext, Timestamp, Uuid};
 
 use crate::users::domain::users::user_id::UserIDErrors::{InvalidUuid, InvalidUuidVersion};
-
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct UserID(Uuid);
 
 const UUID_TIMESTAMP_RAND_VERSION: usize = 7;
 
@@ -21,18 +20,55 @@ pub enum UserIDErrors {
     InvalidUuidVersion(usize),
 }
 
-impl TryFrom<String> for UserID {
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct OwnedUserID(pub(crate) String);
+
+impl TryFrom<String> for OwnedUserID {
     type Error = UserIDErrors;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        UserID::try_from(value.as_str())
+        let err = Uuid::parse_str(value.as_str());
+
+        let uuid = match err {
+            Ok(uuid) => uuid,
+            Err(err) => {
+                return Err(InvalidUuid {
+                    source: anyhow::Error::from(err),
+                })
+            }
+        };
+
+        let uuid_version = uuid.get_version_num();
+        if uuid_version != UUID_TIMESTAMP_RAND_VERSION {
+            return Err(InvalidUuidVersion(uuid_version));
+        }
+
+        Ok(OwnedUserID(value))
     }
 }
 
-impl TryFrom<&str> for UserID {
+impl OwnedUserID {
+    pub fn new() -> Self {
+        let uuid = Uuid::new_v7(Timestamp::now(NoContext)).to_string();
+        OwnedUserID(uuid)
+    }
+
+    pub fn get(&self) -> &str {
+        &self.0
+    }
+
+    pub fn into_inner(self) -> String {
+        self.0
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct UserID<'a>(pub(crate) &'a str);
+
+impl<'a> TryFrom<&'a str> for UserID<'a> {
     type Error = UserIDErrors;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let err = Uuid::parse_str(value);
 
         let uuid = match err {
@@ -44,16 +80,7 @@ impl TryFrom<&str> for UserID {
             }
         };
 
-        Ok(UserID::try_from(uuid)?)
-    }
-}
-
-impl TryFrom<Uuid> for UserID {
-    type Error = UserIDErrors;
-
-    fn try_from(value: Uuid) -> Result<Self, Self::Error> {
-        let uuid_version = value.get_version_num();
-
+        let uuid_version = uuid.get_version_num();
         if uuid_version != UUID_TIMESTAMP_RAND_VERSION {
             return Err(InvalidUuidVersion(uuid_version));
         }
@@ -62,20 +89,24 @@ impl TryFrom<Uuid> for UserID {
     }
 }
 
-impl Display for UserID {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.to_string())
+impl<'a> From<&'a OwnedUserID> for UserID<'a> {
+    fn from(owned: &'a OwnedUserID) -> Self {
+        UserID(&owned.0)
     }
 }
 
-impl UserID {
-    pub fn new() -> UserID {
-        let timestamp = Timestamp::now(NoContext);
-        let uuid = Uuid::new_v7(timestamp);
-        UserID(uuid)
+impl<'a> Display for UserID<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl<'a> UserID<'a> {
+    pub fn get(&self) -> &'a str {
+        self.0
     }
 
-    pub fn into_inner(self) -> Uuid {
-        self.0
+    pub fn to_owned(&self) -> OwnedUserID {
+        OwnedUserID(self.0.to_owned())
     }
 }

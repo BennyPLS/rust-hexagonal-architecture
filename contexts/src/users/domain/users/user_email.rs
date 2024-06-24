@@ -28,4 +28,8 @@ impl<'a> UserEmail<'a> {
     pub fn new(value: &'a str) -> Result<UserEmail<'a>, UserEmailErrors> {
         UserEmail::try_from(value)
     }
+
+    pub fn get(&self) -> &'a str {
+        self.0
+    }
 }
