@@ -2,6 +2,7 @@ use crate::shared::domain::criteria::filter::Operator;
 use crate::shared::domain::criteria::order::OrderType;
 
 pub mod container;
+mod criteria_sqlite;
 mod mappers;
 mod user_criteria_repository_sqlite;
 mod user_repository_sqlite;
@@ -17,6 +18,7 @@ CREATE TABLE users (
     email TEXT NOT NULL
 )"#;
 
+pub const USER_TABLE_NAME: &str = "users";
 pub const USER_TABLE_FIELDS: [&'static str; 4] = ["id", "name", "password", "email"];
 
 pub fn init() {
