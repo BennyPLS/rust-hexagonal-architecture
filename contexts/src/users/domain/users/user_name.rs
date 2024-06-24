@@ -18,7 +18,7 @@ pub enum UserNameErrors {
 impl<'a> TryFrom<&'a str> for UserName<'a> {
     type Error = UserNameErrors;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let length = value.chars().count();
         if length < MIN_NAME_LENGTH {
             return Err(NotLongEnough(length));
@@ -54,7 +54,11 @@ impl UserName<'_> {
 }
 
 impl<'a> UserName<'a> {
-    pub fn get(&self) -> &'a str {
+    pub fn get(&self) -> &str {
         self.0.as_ref()
+    }
+
+    pub fn into_inner(self) -> String {
+        self.0.into_owned()
     }
 }

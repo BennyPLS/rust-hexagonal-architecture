@@ -88,7 +88,11 @@ impl UserPassword<'_> {
 }
 
 impl<'a> UserPassword<'a> {
-    pub fn get(&self) -> &'a str {
+    pub fn get(&self) -> &str {
         self.0.as_ref()
+    }
+
+    pub fn into_inner(self) -> String {
+        self.0.into_owned()
     }
 }

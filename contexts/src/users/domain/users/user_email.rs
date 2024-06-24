@@ -11,7 +11,7 @@ pub enum UserEmailErrors {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct UserEmail<'a>(pub(crate) Cow<'a, str>);
+pub struct UserEmail<'a>(Cow<'a, str>);
 
 impl UserEmail<'_> {
     fn validate(value: &str) -> Result<(), UserEmailErrors> {
@@ -44,7 +44,11 @@ impl TryFrom<String> for UserEmail<'_> {
 }
 
 impl<'a> UserEmail<'a> {
-    pub fn get(&self) -> &'a str {
+    pub fn get(&self) -> &str {
         self.0.as_ref()
+    }
+
+    pub fn into_inner(self) -> String {
+        self.0.into_owned()
     }
 }
