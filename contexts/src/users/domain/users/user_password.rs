@@ -21,7 +21,7 @@ fn hash_password_with_salt(password: &str) -> String {
 const MIN_PASSWORD_LENGTH: usize = 8;
 
 #[derive(Debug, Eq, PartialEq)]
-pub struct UserPassword<'a>(pub(crate) Cow<'a, str>);
+pub struct UserPassword<'a>(Cow<'a, str>);
 
 #[derive(Error, Debug)]
 pub enum UserPasswordErrors {

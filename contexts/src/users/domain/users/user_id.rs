@@ -20,7 +20,7 @@ pub enum UserIDErrors {
 }
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct UserID<'a>(pub(crate) Cow<'a, str>);
+pub struct UserID<'a>(Cow<'a, str>);
 
 impl UserID<'_> {
     fn validate(value: &str) -> Result<(), UserIDErrors> {
