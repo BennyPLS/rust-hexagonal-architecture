@@ -1,10 +1,10 @@
-use thiserror::Error;
 use crate::shared::domain::regex::valid_email;
+use thiserror::Error;
 
 use crate::users::domain::users::user_email::UserEmailErrors::InvalidEmail;
 
 #[derive(Debug)]
-pub struct UserEmail(pub(crate) String);
+pub struct UserEmail<'a>(pub(crate) &'a str);
 
 #[derive(Error, Debug)]
 pub enum UserEmailErrors {
@@ -12,28 +12,20 @@ pub enum UserEmailErrors {
     InvalidEmail,
 }
 
-impl TryFrom<&str> for UserEmail {
+impl<'a> TryFrom<&'a str> for UserEmail<'a> {
     type Error = UserEmailErrors;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         if !valid_email(&value) {
             return Err(InvalidEmail);
         }
 
-        Ok(UserEmail(value.to_owned()))
+        Ok(UserEmail(value))
     }
 }
 
-impl TryFrom<String> for UserEmail {
-    type Error = UserEmailErrors;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        UserEmail::try_from(value.as_str())
-    }
-}
-
-impl UserEmail {
-    pub fn new(value: String) -> Result<UserEmail, UserEmailErrors> {
+impl<'a> UserEmail<'a> {
+    pub fn new(value: &'a str) -> Result<UserEmail<'a>, UserEmailErrors> {
         UserEmail::try_from(value)
     }
 }
