@@ -77,10 +77,11 @@ pub fn find_by<T>(
 
     if let Some(limit) = &criteria.limit {
         query.add_limit(limit);
-    }
 
-    if let Some(offset) = &criteria.offset {
-        query.add_offset(offset);
+        // TODO / FIXME: Change Criteria Data Structure to Requiere limit if offset is set.
+        if let Some(offset) = &criteria.offset {
+            query.add_offset(offset);
+        }
     }
 
     let mut stmt = conn.prepare(query.query)?;
