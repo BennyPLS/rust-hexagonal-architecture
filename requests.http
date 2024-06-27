@@ -1,5 +1,5 @@
 ### This registers a new user
-POST http://localhost:8000/users/register
+POST http://localhost/users/register
 Content-Type: application/json
 
 {
@@ -10,19 +10,21 @@ Content-Type: application/json
 }
 
 ### Gets all the users
-GET http://localhost:8000/users
+GET http://localhost/users
 
 ### Gets all the users matching Criteria
-GET http://localhost:8000/users?limit=1&offset=0
+GET http://localhost/users?offset=0
     &filters[1].field=name
-    &filters[1].operator=eq
-    &filters[1].value=John Doe Horrible
+    &filters[1].operator=co
+    &filters[1].value=John Doe
+    &order.ty=DESC
+    &order.field=id
 
 ### Get only one user by id
-GET http://localhost:8000/users/502a4267-ddcd-4ab3-ac03-68587d2c3d65
+GET http://localhost/users/502a4233-ddcd-7ab3-ac03-68587d2c3d65
 
 ### Update a user (Identifiers are inmutable)
-PUT http://localhost:8000/users/
+PUT http://localhost/users/
 Content-Type: application/json
 
 {
@@ -31,4 +33,4 @@ Content-Type: application/json
 }
 
 ### Deletes a user by id
-DELETE http://localhost:8000/users/502a4267-ddcd-4ab3-ac03-68587d2c3d65
+DELETE http://localhost/users/502a4267-ddcd-4ab3-ac03-68587d2c3d65
