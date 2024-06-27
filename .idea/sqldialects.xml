@@ -2,6 +2,8 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/contexts/src/users/infrastructure/sqlite/user_repository_sqlite.rs" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/00000000000000_diesel_initial_setup/down.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/00000000000000_diesel_initial_setup/up.sql" dialect="PostgreSQL" />
     <file url="PROJECT" dialect="SQLite" />
   </component>
 </project>
