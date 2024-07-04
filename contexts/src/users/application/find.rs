@@ -4,7 +4,7 @@ use shaku::{Component, Interface};
 use thiserror::Error;
 
 use crate::users::domain::users::user_id::{UserID, UserIDErrors};
-use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
+use crate::users::domain::users::user_repository::{UserRepositoryErrors, UserRepository};
 use crate::users::domain::users::{User};
 
 #[derive(Error, Debug)]
@@ -21,10 +21,10 @@ pub enum UserFindErrors {
     },
 }
 
-impl From<RepositoryErrors> for UserFindErrors {
-    fn from(value: RepositoryErrors) -> Self {
+impl From<UserRepositoryErrors> for UserFindErrors {
+    fn from(value: UserRepositoryErrors) -> Self {
         match value {
-            RepositoryErrors::InternalServerError { source } => {
+            UserRepositoryErrors::InternalServerError { source } => {
                 UserFindErrors::InternalServerError {
                     source: Some(source),
                 }

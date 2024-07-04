@@ -2,10 +2,10 @@ use crate::shared::domain::criteria::filter::Operator;
 use crate::shared::domain::criteria::order::OrderType;
 
 pub mod container;
-mod criteria_sqlite;
+mod criteria;
 mod mappers;
-mod user_criteria_repository_sqlite;
-mod user_repository_sqlite;
+mod user_criteria_repository;
+mod user_repository;
 
 const DATABASE_FILE: &str = "database.sqlite";
 

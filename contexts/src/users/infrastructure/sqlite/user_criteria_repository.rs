@@ -5,7 +5,7 @@ use crate::users::domain::users::user_criteria_repository::{
 use crate::users::domain::users::User;
 use crate::users::infrastructure::sqlite::mappers::get_user;
 use crate::users::infrastructure::sqlite::{
-    criteria_sqlite, DATABASE_FILE, USER_TABLE_FIELDS, USER_TABLE_NAME,
+    criteria, DATABASE_FILE, USER_TABLE_FIELDS, USER_TABLE_NAME,
 };
 use shaku::Component;
 use sqlite::{Error as SQLiteError};
@@ -37,7 +37,7 @@ impl UserCriteriaRepository for UserCriteriaRepositorySQLite {
     fn find_by(&self, criteria: &Criteria) -> Result<Vec<User>> {
         let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
-        Ok(criteria_sqlite::find_by(
+        Ok(criteria::find_by(
             &conn,
             USER_TABLE_NAME,
             &USER_TABLE_FIELDS,

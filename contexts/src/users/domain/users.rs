@@ -46,10 +46,10 @@ pub enum UserErrors {
 
 #[derive(Debug)]
 pub struct User<'a> {
-    id: UserID<'a>,
-    name: UserName<'a>,
-    password: UserPassword<'a>,
-    email: UserEmail<'a>,
+    pub id: UserID<'a>,
+    pub name: UserName<'a>,
+    pub password: UserPassword<'a>,
+    pub email: UserEmail<'a>,
 }
 
 impl<'a> User<'a> {
@@ -118,22 +118,6 @@ impl<'a> User<'a> {
         // TODO : Event Driven Design (Delete Events)
     }
 
-    pub fn get_id(&self) -> &str {
-        self.id.get()
-    }
-
-    pub fn get_name(&self) -> &str {
-        &self.name.get()
-    }
-
-    pub fn get_password(&self) -> &str {
-        &self.password.get()
-    }
-
-    pub fn get_email(&self) -> &str {
-        &self.email.get()
-    }
-    
     pub fn into_inners(self) -> (String, String, String, String) {
         (self.id.into_owned(), self.name.into_owned(), self.password.into_owned(), self.email.into_owned())
     }

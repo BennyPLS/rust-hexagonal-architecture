@@ -1,4 +1,4 @@
-use std::borrow::{Cow};
+use std::borrow::Cow;
 use std::fmt::Display;
 
 use thiserror::Error;
@@ -59,7 +59,7 @@ impl TryFrom<String> for UserID<'_> {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         Self::validate(value.as_str())?;
-        
+
         Ok(UserID(Cow::Owned(value)))
     }
 }
@@ -67,6 +67,12 @@ impl TryFrom<String> for UserID<'_> {
 impl<'a> Display for UserID<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl From<&UserID<'_>> for Uuid {
+    fn from(value: &UserID) -> Self {
+        Uuid::from_slice(value.0.as_bytes()).unwrap()
     }
 }
 
@@ -81,6 +87,10 @@ impl UserID<'_> {
 impl<'a> UserID<'a> {
     pub fn get(&self) -> &str {
         self.0.as_ref()
+    }
+
+    pub fn uuid(&self) -> Uuid {
+        Uuid::from_slice(self.0.as_bytes()).unwrap()
     }
 
     pub fn into_owned(self) -> String {

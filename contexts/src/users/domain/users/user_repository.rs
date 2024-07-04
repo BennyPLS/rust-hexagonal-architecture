@@ -6,7 +6,7 @@ use crate::users::domain::users::user_id::UserID;
 use crate::users::domain::users::User;
 
 #[derive(Error, Debug)]
-pub enum RepositoryErrors {
+pub enum UserRepositoryErrors {
     #[error("The data trying to be stored is already there")]
     AlreadyExists,
     #[error("The server has found an unexpected situation")]
@@ -16,7 +16,7 @@ pub enum RepositoryErrors {
     },
 }
 
-type Result<T> = result::Result<T, RepositoryErrors>;
+pub type Result<T> = result::Result<T, UserRepositoryErrors>;
 
 pub trait UserRepository: Interface {
     fn save(&self, user: &User) -> Result<()>;

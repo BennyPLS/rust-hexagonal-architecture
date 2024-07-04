@@ -3,16 +3,16 @@ use sqlite::Error as SQLiteError;
 use sqlite::State;
 
 use crate::users::domain::users::user_id::UserID;
-use crate::users::domain::users::user_repository::{RepositoryErrors, UserRepository};
+use crate::users::domain::users::user_repository::{UserRepositoryErrors, UserRepository};
 use crate::users::domain::users::User;
 use crate::users::infrastructure::sqlite::mappers::get_user;
 use crate::users::infrastructure::sqlite::DATABASE_FILE;
 
-impl From<SQLiteError> for RepositoryErrors {
+impl From<SQLiteError> for UserRepositoryErrors {
     fn from(value: SQLiteError) -> Self {
         if let Some(code) = value.code {
             match code {
-                19 => RepositoryErrors::AlreadyExists,
+                19 => UserRepositoryErrors::AlreadyExists,
                 _ => unmapped_error(value),
             }
         } else {
@@ -21,9 +21,9 @@ impl From<SQLiteError> for RepositoryErrors {
     }
 }
 
-fn unmapped_error(error: SQLiteError) -> RepositoryErrors {
+fn unmapped_error(error: SQLiteError) -> UserRepositoryErrors {
     dbg!(&error);
-    RepositoryErrors::InternalServerError {
+    UserRepositoryErrors::InternalServerError {
         source: anyhow::Error::from(error),
     }
 }
@@ -44,7 +44,7 @@ const STMT_UPDATE: &str = "UPDATE users SET name = ?, password = ?, email = ? WH
 const STMT_DELETE: &str = "DELETE FROM users WHERE id = ?";
 
 impl UserRepository for UserRepositorySQLite {
-    fn save(&self, user: &User) -> Result<(), RepositoryErrors> {
+    fn save(&self, user: &User) -> Result<(), UserRepositoryErrors> {
         let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_INSERT)?;
@@ -93,7 +93,7 @@ impl UserRepository for UserRepositorySQLite {
         users
     }
 
-    fn delete_by(&self, id: &UserID) -> Result<(), RepositoryErrors> {
+    fn delete_by(&self, id: &UserID) -> Result<(), UserRepositoryErrors> {
         let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_DELETE)?;
@@ -105,7 +105,7 @@ impl UserRepository for UserRepositorySQLite {
         Ok(())
     }
 
-    fn update(&self, user: &User) -> Result<(), RepositoryErrors> {
+    fn update(&self, user: &User) -> Result<(), UserRepositoryErrors> {
         let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_UPDATE)?;
