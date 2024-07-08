@@ -5,7 +5,7 @@ use thiserror::Error;
 
 use crate::users::application::find::{UserFind, UserFindErrors};
 use crate::users::application::update::UserUpdateErrors::NotFound;
-use crate::users::domain::users::user_repository::{UserRepositoryErrors, UserRepository};
+use crate::users::domain::users::user_repository::{UpdateErrors, UserRepository};
 use crate::users::domain::users::UserErrors;
 
 #[derive(Error, Debug)]
@@ -24,15 +24,14 @@ pub enum UserUpdateErrors {
     NotFound,
 }
 
-impl From<UserRepositoryErrors> for UserUpdateErrors {
-    fn from(value: UserRepositoryErrors) -> Self {
+impl From<UpdateErrors> for UserUpdateErrors {
+    fn from(value: UpdateErrors) -> Self {
         match value {
-            UserRepositoryErrors::InternalServerError { source } => {
+            UpdateErrors::InternalServerError { source } => {
                 UserUpdateErrors::InternalServerError {
                     source: Some(source),
                 }
             }
-            _ => UserUpdateErrors::InternalServerError { source: None },
         }
     }
 }

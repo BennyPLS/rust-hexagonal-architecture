@@ -3,30 +3,39 @@ use sqlite::Error as SQLiteError;
 use sqlite::State;
 
 use crate::users::domain::users::user_id::UserID;
-use crate::users::domain::users::user_repository::{UserRepositoryErrors, UserRepository};
+use crate::users::domain::users::user_repository::{
+    DeleteErrors, FindErrors, SaveErrors, UpdateErrors, UserRepository,
+};
 use crate::users::domain::users::User;
 use crate::users::infrastructure::sqlite::mappers::get_user;
 use crate::users::infrastructure::sqlite::DATABASE_FILE;
 
-impl From<SQLiteError> for UserRepositoryErrors {
+impl From<SQLiteError> for SaveErrors {
     fn from(value: SQLiteError) -> Self {
         if let Some(code) = value.code {
             match code {
-                19 => UserRepositoryErrors::AlreadyExists,
-                _ => unmapped_error(value),
+                19 => SaveErrors::AlreadyExists,
+                _ => value.into(),
             }
         } else {
-            unmapped_error(value)
+            value.into()
         }
     }
 }
 
-fn unmapped_error(error: SQLiteError) -> UserRepositoryErrors {
-    dbg!(&error);
-    UserRepositoryErrors::InternalServerError {
-        source: anyhow::Error::from(error),
-    }
+macro_rules! anyhow_from {
+    ($from:ty, $to:ty) => {
+        impl From<$from> for $to {
+            fn from(value: $from) -> Self {
+                value.into()
+            }
+        }
+    };
 }
+
+anyhow_from!(SQLiteError, FindErrors);
+anyhow_from!(SQLiteError, DeleteErrors);
+anyhow_from!(SQLiteError, UpdateErrors);
 
 #[derive(Component)]
 #[shaku(interface = UserRepository)]
@@ -44,7 +53,7 @@ const STMT_UPDATE: &str = "UPDATE users SET name = ?, password = ?, email = ? WH
 const STMT_DELETE: &str = "DELETE FROM users WHERE id = ?";
 
 impl UserRepository for UserRepositorySQLite {
-    fn save(&self, user: &User) -> Result<(), UserRepositoryErrors> {
+    fn save(&self, user: &User) -> Result<(), SaveErrors> {
         let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_INSERT)?;
@@ -59,41 +68,38 @@ impl UserRepository for UserRepositorySQLite {
         Ok(())
     }
 
-    fn find_by(&self, id: &UserID) -> Option<User> {
-        let conn = sqlite::Connection::open(DATABASE_FILE).ok()?;
+    fn find_by(&self, id: &UserID) -> Result<Option<User>, FindErrors> {
+        let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
-        let mut stmt = conn.prepare(STMT_FIND_BY_ID).ok()?;
+        let mut stmt = conn.prepare(STMT_FIND_BY_ID)?;
 
-        stmt.bind((1, id.to_string().as_str())).ok()?;
+        stmt.bind((1, id.to_string().as_str()))?;
 
-        stmt.next().ok()?;
+        let state = stmt.next()?;
 
-        Some(get_user(&stmt))
-    }
-
-    fn get_all(&self) -> Vec<User> {
-        let conn = match sqlite::Connection::open(DATABASE_FILE) {
-            Ok(conn) => conn,
-            Err(_) => return vec![],
-        };
-
-        let stmt = conn.prepare(STMT_GET_ALL);
-
-        if stmt.is_err() {
-            return vec![];
+        if state == State::Row {
+            Ok(Some(get_user(&stmt)))
+        } else {
+            Ok(None)
         }
 
-        let mut stmt = stmt.unwrap();
+    }
+
+    fn get_all(&self) -> Result<Vec<User>, FindErrors> {
+        let conn = sqlite::Connection::open(DATABASE_FILE)?;
+
+        let mut stmt = conn.prepare(STMT_GET_ALL)?;
 
         let mut users: Vec<User> = vec![];
+
         while let Ok(State::Row) = stmt.next() {
             users.push(get_user(&stmt))
         }
 
-        users
+        Ok(users)
     }
 
-    fn delete_by(&self, id: &UserID) -> Result<(), UserRepositoryErrors> {
+    fn delete_by(&self, id: &UserID) -> Result<(), DeleteErrors> {
         let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_DELETE)?;
@@ -105,7 +111,7 @@ impl UserRepository for UserRepositorySQLite {
         Ok(())
     }
 
-    fn update(&self, user: &User) -> Result<(), UserRepositoryErrors> {
+    fn update(&self, user: &User) -> Result<(), UpdateErrors> {
         let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_UPDATE)?;

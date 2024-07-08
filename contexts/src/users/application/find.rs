@@ -4,7 +4,7 @@ use shaku::{Component, Interface};
 use thiserror::Error;
 
 use crate::users::domain::users::user_id::{UserID, UserIDErrors};
-use crate::users::domain::users::user_repository::{UserRepositoryErrors, UserRepository};
+use crate::users::domain::users::user_repository::{FindErrors, UserRepository};
 use crate::users::domain::users::{User};
 
 #[derive(Error, Debug)]
@@ -21,22 +21,21 @@ pub enum UserFindErrors {
     },
 }
 
-impl From<UserRepositoryErrors> for UserFindErrors {
-    fn from(value: UserRepositoryErrors) -> Self {
+impl From<FindErrors> for UserFindErrors {
+    fn from(value: FindErrors) -> Self {
         match value {
-            UserRepositoryErrors::InternalServerError { source } => {
+            FindErrors::InternalServerError { source } => {
                 UserFindErrors::InternalServerError {
                     source: Some(source),
                 }
             }
-            _ => UserFindErrors::InternalServerError { source: None },
         }
     }
 }
 
 pub trait UserFind: Interface {
     fn find_by(&self, id: &str) -> Result<Option<User>, UserFindErrors>;
-    fn get_all(&self) -> Vec<User>;
+    fn get_all(&self) ->  Result<Vec<User>, UserFindErrors>;
 }
 
 #[derive(Component)]
@@ -48,10 +47,10 @@ pub struct UserFindService {
 
 impl UserFind for UserFindService {
     fn find_by(&self, id: &str) -> Result<Option<User>, UserFindErrors> {
-        Ok(self.user_repository.find_by(&UserID::try_from(id)?))
+        Ok(self.user_repository.find_by(&UserID::try_from(id)?)?)
     }
 
-    fn get_all(&self) -> Vec<User> {
-        self.user_repository.get_all()
+    fn get_all(&self) -> Result<Vec<User>, UserFindErrors> {
+        Ok(self.user_repository.get_all()?)
     }
 }

@@ -1,11 +1,11 @@
-use rocket::http::Status;
-use contexts::users::application::find::{UserFind, UserFindErrors};
 use crate::controllers::users::UserResponse;
-use crate::Inject;
-use crate::responders::JsonResponse;
 use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
+use crate::responders::JsonResponse;
+use crate::Inject;
+use contexts::users::application::find::{UserFind, UserFindErrors};
+use rocket::http::Status;
 
-impl From<UserFindErrors> for ProblemDetail {
+impl From<UserFindErrors> for Box<ProblemDetail> {
     fn from(value: UserFindErrors) -> Self {
         match value {
             UserFindErrors::InternalServerError { source } => {
@@ -15,35 +15,36 @@ impl From<UserFindErrors> for ProblemDetail {
                     err = err.detail(source.to_string());
                 }
 
-                err.build()
+                Box::from(err.build())
             }
-            UserFindErrors::UserIDError { source } => {
+            UserFindErrors::UserIDError { source } => Box::from(
                 ProblemDetailBuilder::from(Status::UnprocessableEntity)
                     .detail(source.to_string())
-                    .build()
-            }
+                    .build(),
+            ),
         }
     }
 }
 
 #[get("/")]
-pub fn user_get_all(user_service: Inject<'_, dyn UserFind>) -> JsonResponse<Vec<UserResponse>> {
-    JsonResponse::ok(
+pub fn user_get_all(
+    user_service: Inject<'_, dyn UserFind>,
+) -> Result<JsonResponse<Vec<UserResponse>>, Box<ProblemDetail>> {
+    Ok(JsonResponse::ok(
         user_service
-            .get_all()
+            .get_all()?
             .into_iter()
             .map(UserResponse::from)
             .collect(),
-    )
+    ))
 }
 
 #[get("/<uuid>")]
 pub fn user_get(
-    uuid: String,
+    uuid: &str,
     user_service: Inject<'_, dyn UserFind>,
-) -> Result<JsonResponse<UserResponse>, ProblemDetail> {
-    match user_service.find_by(&uuid)? {
-        Some(user) => Ok(JsonResponse::ok(UserResponse::from(user))),
-        None => Err(ProblemDetail::from(Status::NotFound)),
-    }
+) -> Result<JsonResponse<Option<UserResponse>>, Box<ProblemDetail>> {
+    Ok(JsonResponse::ok(
+        user_service.find_by(uuid)?.map(UserResponse::from),
+    ))
 }
