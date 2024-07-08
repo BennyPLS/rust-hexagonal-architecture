@@ -58,10 +58,10 @@ impl UserRepository for UserRepositorySQLite {
 
         let mut stmt = conn.prepare(STMT_INSERT)?;
 
-        stmt.bind((1, user.get_id()))?;
-        stmt.bind((2, user.get_name()))?;
-        stmt.bind((3, user.get_password()))?;
-        stmt.bind((4, user.get_email()))?;
+        stmt.bind((1, user.id.get()))?;
+        stmt.bind((2, user.name.get()))?;
+        stmt.bind((3, user.password.get()))?;
+        stmt.bind((4, user.email.get()))?;
 
         stmt.next()?;
 
@@ -82,7 +82,6 @@ impl UserRepository for UserRepositorySQLite {
         } else {
             Ok(None)
         }
-
     }
 
     fn get_all(&self) -> Result<Vec<User>, ReadErrors> {
@@ -116,10 +115,10 @@ impl UserRepository for UserRepositorySQLite {
 
         let mut stmt = conn.prepare(STMT_UPDATE)?;
 
-        stmt.bind((1, user.get_name()))?;
-        stmt.bind((2, user.get_password()))?;
-        stmt.bind((3, user.get_email()))?;
-        stmt.bind((4, user.get_id()))?;
+        stmt.bind((1, user.name.get()))?;
+        stmt.bind((2, user.password.get()))?;
+        stmt.bind((3, user.email.get()))?;
+        stmt.bind((4, user.id.get()))?;
 
         stmt.next()?;
 
