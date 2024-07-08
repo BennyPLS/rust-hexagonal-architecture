@@ -50,11 +50,13 @@ pub enum CriteriaError {
     },
 }
 
-impl From<CriteriaError> for ProblemDetail {
+impl From<CriteriaError> for Box<ProblemDetail> {
     fn from(value: CriteriaError) -> Self {
-        ProblemDetailBuilder::from(Status::UnprocessableEntity)
-            .detail(value.to_string())
-            .build()
+        Box::from(
+            ProblemDetailBuilder::from(Status::UnprocessableEntity)
+                .detail(value.to_string())
+                .build(),
+        )
     }
 }
 
@@ -126,23 +128,18 @@ impl<'a> TryFrom<OrderRequest<'a>> for Order<'a> {
     }
 }
 
-impl From<UserCriteriaErrors> for ProblemDetail {
+impl From<UserCriteriaErrors> for Box<ProblemDetail> {
     fn from(value: UserCriteriaErrors) -> Self {
         match value {
             UserCriteriaErrors::InternalServerError { source } => {
-                let mut err = ProblemDetailBuilder::from(Status::InternalServerError);
-
-                if let Some(source) = source {
-                    err = err.detail(source.to_string());
-                }
-
-                err.build()
+                dbg!(source);
+                Box::from(ProblemDetail::from(Status::InternalServerError))
             }
-            UserCriteriaErrors::FieldNotFound(_) => {
+            UserCriteriaErrors::FieldNotFound(_) => Box::from(
                 ProblemDetailBuilder::from(Status::UnprocessableEntity)
                     .detail(value.to_string())
-                    .build()
-            }
+                    .build(),
+            ),
         }
     }
 }
@@ -154,7 +151,7 @@ pub fn user_criteria(
     limit: Option<&str>,
     offset: Option<&str>,
     criteria_service: Inject<'_, dyn UserCriteria>,
-) -> Result<JsonResponse<Vec<UserResponse>>, ProblemDetail> {
+) -> Result<JsonResponse<Vec<UserResponse>>, Box<ProblemDetail>> {
     let criteria = CriteriaRequest {
         order,
         filters,

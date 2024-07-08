@@ -40,20 +40,13 @@ pub struct UserRequest<'a> {
 pub struct UserResponse {
     uuid: String,
     name: String,
-    #[serde(rename = "password")]
-    password: String,
     email: String,
 }
 
 impl From<User<'_>> for UserResponse {
     fn from(value: User) -> Self {
-        let (uuid, name, password, email) = value.into_inners();
-        UserResponse {
-            uuid,
-            name,
-            password,
-            email,
-        }
+        let (uuid, name, _, email) = value.into_inners();
+        UserResponse { uuid, name, email }
     }
 }
 

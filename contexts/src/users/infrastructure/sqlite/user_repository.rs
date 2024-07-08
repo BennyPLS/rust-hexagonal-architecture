@@ -4,7 +4,7 @@ use sqlite::State;
 
 use crate::users::domain::users::user_id::UserID;
 use crate::users::domain::users::user_repository::{
-    DeleteErrors, FindErrors, SaveErrors, UpdateErrors, UserRepository,
+    DeleteErrors, ReadErrors, SaveErrors, UpdateErrors, UserRepository,
 };
 use crate::users::domain::users::User;
 use crate::users::infrastructure::sqlite::mappers::get_user;
@@ -33,7 +33,7 @@ macro_rules! anyhow_from {
     };
 }
 
-anyhow_from!(SQLiteError, FindErrors);
+anyhow_from!(SQLiteError, ReadErrors);
 anyhow_from!(SQLiteError, DeleteErrors);
 anyhow_from!(SQLiteError, UpdateErrors);
 
@@ -68,7 +68,7 @@ impl UserRepository for UserRepositorySQLite {
         Ok(())
     }
 
-    fn find_by(&self, id: &UserID) -> Result<Option<User>, FindErrors> {
+    fn find_by(&self, id: &UserID) -> Result<Option<User>, ReadErrors> {
         let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_FIND_BY_ID)?;
@@ -85,7 +85,7 @@ impl UserRepository for UserRepositorySQLite {
 
     }
 
-    fn get_all(&self) -> Result<Vec<User>, FindErrors> {
+    fn get_all(&self) -> Result<Vec<User>, ReadErrors> {
         let conn = sqlite::Connection::open(DATABASE_FILE)?;
 
         let mut stmt = conn.prepare(STMT_GET_ALL)?;

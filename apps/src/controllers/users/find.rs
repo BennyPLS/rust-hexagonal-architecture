@@ -2,26 +2,32 @@ use crate::controllers::users::UserResponse;
 use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
 use crate::responders::JsonResponse;
 use crate::Inject;
-use contexts::users::application::find::{UserFind, UserFindErrors};
+use contexts::users::application::find::{UserFind, UserFindErrors, UserListErrors};
 use rocket::http::Status;
 
 impl From<UserFindErrors> for Box<ProblemDetail> {
     fn from(value: UserFindErrors) -> Self {
         match value {
             UserFindErrors::InternalServerError { source } => {
-                let mut err = ProblemDetailBuilder::from(Status::InternalServerError);
-
-                if let Some(source) = source {
-                    err = err.detail(source.to_string());
-                }
-
-                Box::from(err.build())
+                dbg!(source);
+                Box::from(ProblemDetail::from(Status::InternalServerError))
             }
             UserFindErrors::UserIDError { source } => Box::from(
                 ProblemDetailBuilder::from(Status::UnprocessableEntity)
                     .detail(source.to_string())
                     .build(),
             ),
+        }
+    }
+}
+
+impl From<UserListErrors> for Box<ProblemDetail> {
+    fn from(value: UserListErrors) -> Self {
+        match value {
+            UserListErrors::InternalServerError { source } => {
+                dbg!(source);
+                Box::from(ProblemDetail::from(Status::InternalServerError))
+            }
         }
     }
 }

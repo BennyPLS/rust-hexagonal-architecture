@@ -16,7 +16,7 @@ pub enum SaveErrors {
 }
 
 #[derive(Error, Debug)]
-pub enum FindErrors {
+pub enum ReadErrors {
     #[error("The server has found an unexpected situation")]
     InternalServerError {
         #[from]
@@ -44,8 +44,8 @@ pub enum UpdateErrors {
 
 pub trait UserRepository: Interface {
     fn save(&self, user: &User) -> Result<(), SaveErrors>;
-    fn find_by(&self, id: &UserID) -> Result<Option<User>, FindErrors>;
-    fn get_all(&self) -> Result<Vec<User>, FindErrors>;
+    fn find_by(&self, id: &UserID) -> Result<Option<User>, ReadErrors>;
+    fn get_all(&self) -> Result<Vec<User>, ReadErrors>;
     fn delete_by(&self, id: &UserID) -> Result<(), DeleteErrors>;
     fn update(&self, user: &User) -> Result<(), UpdateErrors>;
 }

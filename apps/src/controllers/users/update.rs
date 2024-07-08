@@ -1,5 +1,6 @@
 use crate::guard::Json;
 use crate::responders::problem_detail::{ProblemDetail, ProblemDetailBuilder};
+use crate::responders::JsonResponse;
 use crate::Inject;
 use contexts::users::application::update::{UserUpdate, UserUpdateErrors};
 use garde::Validate;
@@ -19,22 +20,17 @@ pub struct UserUpdateRequest<'a> {
     email: Option<&'a str>,
 }
 
-impl From<UserUpdateErrors> for ProblemDetail {
+impl From<UserUpdateErrors> for Box<ProblemDetail> {
     fn from(value: UserUpdateErrors) -> Self {
         match value {
             UserUpdateErrors::InternalServerError { source } => {
-                let mut err = ProblemDetailBuilder::from(Status::InternalServerError);
-
-                if let Some(source) = source {
-                    err = err.detail(source.to_string());
-                }
-
-                err.build()
+                dbg!(source);
+                Box::from(ProblemDetail::from(Status::InternalServerError))
             }
-            UserUpdateErrors::NotFound => ProblemDetailBuilder::from(Status::NotFound)
+            UserUpdateErrors::NotFound => Box::from( ProblemDetailBuilder::from(Status::NotFound)
                 .detail(UserUpdateErrors::NotFound.to_string())
-                .build(),
-            UserUpdateErrors::UserError { source } => ProblemDetail::from(source),
+                .build() ),
+            UserUpdateErrors::UserError { source } => Box::from( ProblemDetail::from(source) ),
         }
     }
 }
@@ -43,10 +39,10 @@ impl From<UserUpdateErrors> for ProblemDetail {
 pub fn user_update(
     updated_user: Json<UserUpdateRequest>,
     update_service: Inject<'_, dyn UserUpdate>,
-) -> Result<Status, ProblemDetail> {
+) -> Result<JsonResponse<()>, Box<ProblemDetail>> {
     let user = updated_user.into_inner();
 
     update_service.update(&user.uuid.to_string(), user.name, user.password, user.email)?;
 
-    Ok(Status::NoContent)
+    Ok(JsonResponse::created(()))
 }
